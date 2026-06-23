@@ -1,0 +1,1 @@
+export type GameScreen = 'boot' | 'hatch' | 'main' | 'profile' | 'stats';

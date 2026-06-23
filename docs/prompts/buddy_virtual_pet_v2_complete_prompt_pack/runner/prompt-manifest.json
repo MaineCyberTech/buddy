@@ -1,0 +1,148 @@
+{
+  "project": "buddy-virtual-pet",
+  "version": "2.0.0",
+  "phases": [
+    {
+      "id": "00",
+      "prompt": "prompts/01-foundation-and-architecture.md",
+      "requiredChecks": [
+        "lint",
+        "typecheck",
+        "test",
+        "build"
+      ]
+    },
+    {
+      "id": "01",
+      "prompt": "prompts/02-deterministic-generation-engine.md",
+      "requiredChecks": [
+        "lint",
+        "typecheck",
+        "test",
+        "build"
+      ]
+    },
+    {
+      "id": "02",
+      "prompt": "prompts/03-hatch-flow-and-main-device-ui.md",
+      "requiredChecks": [
+        "lint",
+        "typecheck",
+        "test",
+        "build"
+      ]
+    },
+    {
+      "id": "03",
+      "prompt": "prompts/04-care-loop-needs-and-actions.md",
+      "requiredChecks": [
+        "lint",
+        "typecheck",
+        "test",
+        "build"
+      ]
+    },
+    {
+      "id": "04",
+      "prompt": "prompts/05-locations-adventures-loot.md",
+      "requiredChecks": [
+        "lint",
+        "typecheck",
+        "test",
+        "build"
+      ]
+    },
+    {
+      "id": "05",
+      "prompt": "prompts/06-lifecycle-skills-and-progression.md",
+      "requiredChecks": [
+        "lint",
+        "typecheck",
+        "test",
+        "build"
+      ]
+    },
+    {
+      "id": "06",
+      "prompt": "prompts/07-home-customization-inventory-economy.md",
+      "requiredChecks": [
+        "lint",
+        "typecheck",
+        "test",
+        "build"
+      ]
+    },
+    {
+      "id": "07",
+      "prompt": "prompts/08-pwa-offline-local-first-save.md",
+      "requiredChecks": [
+        "lint",
+        "typecheck",
+        "test",
+        "build"
+      ]
+    },
+    {
+      "id": "08",
+      "prompt": "prompts/09-auth-account-gating-cloud-save.md",
+      "requiredChecks": [
+        "lint",
+        "typecheck",
+        "test",
+        "build"
+      ]
+    },
+    {
+      "id": "09",
+      "prompt": "prompts/10-testing-quality-accessibility-security.md",
+      "requiredChecks": [
+        "lint",
+        "typecheck",
+        "test",
+        "build"
+      ]
+    },
+    {
+      "id": "10",
+      "prompt": "prompts/11-polish-roadmap-and-release-readiness.md",
+      "requiredChecks": [
+        "lint",
+        "typecheck",
+        "test",
+        "build"
+      ]
+    },
+    {
+      "id": "11",
+      "prompt": "prompts/12-ai-agent-operator-runbook.md",
+      "requiredChecks": [
+        "lint",
+        "typecheck",
+        "test",
+        "build"
+      ]
+    }
+  ],
+  "expansionPrompts": [
+    "prompts/13-anti-cheat-server-authority.md",
+    "prompts/14-database-and-api-contracts.md",
+    "prompts/15-supabase-integration.md",
+    "prompts/16-advanced-pwa-mobile-install.md",
+    "prompts/17-mini-games-pack.md",
+    "prompts/18-achievements-collections-and-journal.md",
+    "prompts/19-seasonal-content-system.md"
+  ],
+  "audits": [
+    "audits/00-master-quality-audit.md",
+    "audits/01-generation-audit.md",
+    "audits/02-gameplay-loop-audit.md",
+    "audits/03-pwa-offline-audit.md",
+    "audits/04-security-save-audit.md",
+    "audits/05-mobile-ux-audit.md",
+    "audits/06-accessibility-audit.md",
+    "audits/07-content-consistency-audit.md",
+    "audits/08-release-readiness-audit.md",
+    "audits/09-supabase-rls-audit.md",
+    "audits/10-anti-cheat-economy-audit.md"
+  ]
+}
