@@ -7,10 +7,13 @@ import { applyAction, applyOfflineDecay, CareActionType } from '@/lib/actions/ca
 import { saveGame } from '@/lib/storage/indexeddb';
 import { LcdDisplay } from '@/components/device/LcdDisplay';
 import { StatBars, NeedBars } from '@/components/ui/StatBars';
+import { AdventureScreen } from '@/components/device/AdventureScreen';
+import { InventoryScreen } from '@/components/device/InventoryScreen';
+import { getStageName, getStageProgress } from '@/lib/progression/lifecycle';
 
 interface MainDeviceProps {
   buddy: BuddyState;
-  initialTab?: 'main' | 'profile' | 'stats';
+  initialTab?: 'main' | 'profile' | 'stats' | 'adventure' | 'inventory';
 }
 
 const ACTIONS: { type: CareActionType; label: string; icon: string }[] = [
@@ -25,7 +28,7 @@ const ACTIONS: { type: CareActionType; label: string; icon: string }[] = [
 
 export function MainDevice({ buddy: initialBuddy, initialTab = 'main' }: MainDeviceProps) {
   const [currentBuddy, setCurrentBuddy] = useState(initialBuddy);
-  const [tab, setTab] = useState<'main' | 'profile' | 'stats'>(initialTab);
+  const [tab, setTab] = useState<'main' | 'profile' | 'stats' | 'adventure' | 'inventory'>(initialTab);
   const [message, setMessage] = useState('');
   const [messageKey, setMessageKey] = useState(0);
   const [autoSaveStatus, setAutoSaveStatus] = useState('');
@@ -53,12 +56,14 @@ export function MainDevice({ buddy: initialBuddy, initialTab = 'main' }: MainDev
       setMessageKey((k) => k + 1);
 
       try {
+        const inv = useGameStore.getState().inventory;
         await saveGame({
-          version: 1,
+          version: 2,
           guestId: useGameStore.getState().guestId,
           buddy: updated,
           createdAt: updated.identity.generatedAt,
           updatedAt: Date.now(),
+          inventory: inv,
         });
         setAutoSaveStatus('saved');
         setTimeout(() => setAutoSaveStatus(''), 2000);
@@ -136,24 +141,36 @@ export function MainDevice({ buddy: initialBuddy, initialTab = 'main' }: MainDev
           ))}
         </div>
 
-        <div className="flex justify-center gap-4 border-t border-[#1a1a2e] pt-4 mt-2">
+        <div className="flex justify-center gap-2 border-t border-[#1a1a2e] pt-3 mt-2 flex-wrap">
           <button
             onClick={() => setTab('main')}
-            className={`text-xs font-lcd focus-ring px-3 py-1 rounded ${tab === 'main' ? 'lcd-text-accent border-b border-lcd-accent' : 'lcd-text opacity-50'}`}
+            className={`text-xs font-lcd focus-ring px-2 py-1 rounded ${tab === 'main' ? 'lcd-text-accent border-b border-lcd-accent' : 'lcd-text opacity-50'}`}
           >
             DEVICE
           </button>
           <button
             onClick={() => setTab('profile')}
-            className={`text-xs font-lcd focus-ring px-3 py-1 rounded ${tab === 'profile' ? 'lcd-text-accent border-b border-lcd-accent' : 'lcd-text opacity-50'}`}
+            className={`text-xs font-lcd focus-ring px-2 py-1 rounded ${tab === 'profile' ? 'lcd-text-accent border-b border-lcd-accent' : 'lcd-text opacity-50'}`}
           >
             PROFILE
           </button>
           <button
             onClick={() => setTab('stats')}
-            className={`text-xs font-lcd focus-ring px-3 py-1 rounded ${tab === 'stats' ? 'lcd-text-accent border-b border-lcd-accent' : 'lcd-text opacity-50'}`}
+            className={`text-xs font-lcd focus-ring px-2 py-1 rounded ${tab === 'stats' ? 'lcd-text-accent border-b border-lcd-accent' : 'lcd-text opacity-50'}`}
           >
             STATS
+          </button>
+          <button
+            onClick={() => setTab('adventure')}
+            className={`text-xs font-lcd focus-ring px-2 py-1 rounded ${tab === 'adventure' ? 'lcd-text-accent border-b border-lcd-accent' : 'lcd-text opacity-50'}`}
+          >
+            EXPLORE
+          </button>
+          <button
+            onClick={() => setTab('inventory')}
+            className={`text-xs font-lcd focus-ring px-2 py-1 rounded ${tab === 'inventory' ? 'lcd-text-accent border-b border-lcd-accent' : 'lcd-text opacity-50'}`}
+          >
+            ITEMS
           </button>
         </div>
 
@@ -171,6 +188,11 @@ export function MainDevice({ buddy: initialBuddy, initialTab = 'main' }: MainDev
                 <span className="rarity-shiny ml-2">✦ SHINY ✦</span>
               )}
             </p>
+            {currentBuddy.progression && (
+              <p className="text-xs lcd-text-accent opacity-80">
+                {getStageName(currentBuddy.progression.lifecycle)} stage
+              </p>
+            )}
             <p className="lcd-text text-xs mt-2 opacity-60">
               {currentBuddy.personality.name} personality
             </p>
@@ -188,6 +210,14 @@ export function MainDevice({ buddy: initialBuddy, initialTab = 'main' }: MainDev
             <StatBars stats={currentBuddy.stats} />
             <NeedBars needs={currentBuddy.needs} />
           </div>
+        )}
+
+        {tab === 'adventure' && (
+          <AdventureScreen onBack={() => setTab('main')} />
+        )}
+
+        {tab === 'inventory' && (
+          <InventoryScreen onBack={() => setTab('main')} />
         )}
       </div>
     </div>

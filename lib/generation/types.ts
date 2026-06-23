@@ -73,6 +73,7 @@ export interface BuddyState {
   health: number;
   lastInteraction: number;
   totalCareActions: number;
+  progression: ProgressionState;
 }
 
 export interface GameSave {
@@ -81,6 +82,7 @@ export interface GameSave {
   guestId: string;
   createdAt: number;
   updatedAt: number;
+  inventory?: InventoryState;
 }
 
 export const STAT_NAMES: StatName[] = ['courage', 'curiosity', 'playfulness', 'discipline', 'empathy'];
@@ -100,3 +102,108 @@ export const STAT_RANGES = {
   dump: { min: 0, max: 30 },
   normal: { min: 35, max: 75 },
 };
+
+export type LifecycleStage = 'egg' | 'baby' | 'child' | 'teen' | 'adult' | 'elder';
+
+export interface SkillState {
+  exploring: number;
+  training: number;
+  social: number;
+  crafting: number;
+  cooking: number;
+}
+
+export interface InventoryItem {
+  id: string;
+  quantity: number;
+}
+
+export interface InventoryState {
+  coins: number;
+  items: InventoryItem[];
+}
+
+export interface ItemDefinition {
+  id: string;
+  name: string;
+  category: 'food' | 'toy' | 'hat' | 'decor' | 'skill_book' | 'material' | 'medicine' | 'trinket' | 'quest';
+  rarity: Rarity;
+  description: string;
+  icon: string;
+  sellValue: number;
+  effect?: string;
+  flavorText: string;
+}
+
+export interface LootTableEntry {
+  itemId: string;
+  weight: number;
+  minQuantity: number;
+  maxQuantity: number;
+}
+
+export interface LootTable {
+  id: string;
+  entries: LootTableEntry[];
+  coinMin: number;
+  coinMax: number;
+  xpGain: number;
+}
+
+export interface LocationDefinition {
+  id: string;
+  name: string;
+  description: string;
+  requiredStage?: LifecycleStage;
+  requiresAccount: boolean;
+  energyCost: number;
+  statChecks: Partial<Record<StatName, number>>;
+  lootTableId: string;
+  backgroundAscii: string[];
+  encounterPool: string[];
+  flavorText: string;
+  riskProfile: 'safe' | 'moderate' | 'risky' | 'dangerous';
+}
+
+export interface AdventureResult {
+  success: boolean;
+  locationId: string;
+  message: string;
+  coinsEarned: number;
+  itemsReceived: InventoryItem[];
+  xpGained: number;
+  bondChange: number;
+  statChanges: Partial<BuddyStats>;
+  energyCost: number;
+  encounterText: string;
+}
+
+export interface Achievement {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  condition: (state: BuddyState, inventory: InventoryState, totalAdventures: number) => boolean;
+  rewardCoins?: number;
+  rewardItemId?: string;
+}
+
+export interface MemoryEntry {
+  id: string;
+  type: 'hatch' | 'evolution' | 'adventure' | 'milestone' | 'achievement';
+  title: string;
+  description: string;
+  timestamp: number;
+  icon: string;
+}
+
+export interface ProgressionState {
+  lifecycle: LifecycleStage;
+  age: number;
+  skills: SkillState;
+  bondLevel: number;
+  totalAdventures: number;
+  memories: MemoryEntry[];
+  achievements: string[];
+  careQuality: number;
+}

@@ -10,6 +10,7 @@ import {
   RARITY_WEIGHTS,
   SHINY_CHANCE,
 } from '@/lib/generation/types';
+import { createInitialProgression } from '@/lib/progression/lifecycle';
 import { SPECIES } from '@/data/species';
 import { EYES } from '@/data/eyes';
 import { HATS } from '@/data/hats';
@@ -93,5 +94,6 @@ export function createInitialBuddyState(userId: string, nickname?: string): Budd
     health: 100,
     lastInteraction: Date.now(),
     totalCareActions: 0,
+    progression: createInitialProgression(),
   };
 }

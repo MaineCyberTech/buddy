@@ -16,6 +16,9 @@ export default function HomePage() {
         const save = await loadGame();
         if (save?.buddy) {
           setBuddy(save.buddy);
+          if (save.inventory) {
+            useGameStore.getState().setInventory(save.inventory);
+          }
           setScreen('main');
         } else {
           setScreen('hatch');

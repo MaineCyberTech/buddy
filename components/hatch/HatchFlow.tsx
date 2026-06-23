@@ -30,11 +30,12 @@ export function HatchFlow() {
     setBuddy(finalBuddy);
     try {
       await saveGame({
-        version: 1,
+        version: 2,
         guestId: useGameStore.getState().guestId,
         buddy: finalBuddy,
         createdAt: Date.now(),
         updatedAt: Date.now(),
+        inventory: useGameStore.getState().inventory,
       });
     } catch (err) {
       console.error('Save after hatch failed:', err);
