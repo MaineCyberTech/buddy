@@ -1,0 +1,47 @@
+# Target Infrastructure Folder Structure
+
+```txt
+infra/
+  terraform/
+    modules/
+      digitalocean-droplet/
+      digitalocean-firewall/
+      cloudflare-dns/
+      cloudflare-tunnel/
+    envs/
+      dev/
+      prod/
+    scripts/
+    README.md
+  runtime/
+    docker-compose.dev.yml
+    docker-compose.prod.yml
+    .env.example
+    traefik/
+      traefik.yml
+      dynamic.yml
+    cloudflared/
+      config.yml.example
+scripts/
+  infra/
+    validate-local.ps1
+    validate-local.sh
+    smoke-dev.ps1
+    smoke-dev.sh
+    smoke-prod.ps1
+    smoke-prod.sh
+docs/
+  infra/
+    architecture/
+    runbooks/
+    secrets/
+    reports/
+.github/
+  workflows/
+    infra-validate.yml
+    infra-plan-dev.yml
+    infra-apply-dev.yml
+    infra-plan-prod.yml
+    deploy-dev.yml
+    deploy-prod.yml
+```

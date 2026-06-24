@@ -1,0 +1,18 @@
+# Use only if automated certificate placement is required.
+# Prefer manual first-time cert placement when possible.
+
+- name: Install Cloudflare Origin certs on droplet
+  uses: appleboy/ssh-action@v1
+  with:
+    host: ${{ steps.ip.outputs.droplet_ip }}
+    username: root
+    key: ${{ secrets.CI_SSH_PRIVATE_KEY }}
+    script: |
+      set -euo pipefail
+      mkdir -p /opt/chat/certs
+      printf '%s' '${{ secrets.CF_ORIGIN_CERT_PEM_B64 }}' | base64 -d > /opt/chat/certs/cloudflare-origin.pem
+      printf '%s' '${{ secrets.CF_ORIGIN_CERT_KEY_B64 }}' | base64 -d > /opt/chat/certs/cloudflare-origin-key.pem
+      chmod 644 /opt/chat/certs/cloudflare-origin.pem
+      chmod 600 /opt/chat/certs/cloudflare-origin-key.pem
+      test -s /opt/chat/certs/cloudflare-origin.pem
+      test -s /opt/chat/certs/cloudflare-origin-key.pem

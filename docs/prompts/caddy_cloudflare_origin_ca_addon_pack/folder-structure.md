@@ -1,0 +1,43 @@
+# Folder Structure
+
+```txt
+caddy_cloudflare_origin_ca_addon_pack/
+  README.md
+  prompts/
+    00-master-caddy-cloudflare-origin-prompt.md
+    01-repo-inspection-and-route-contract.md
+    02-caddy-origin-ca-implementation.md
+    03-docker-compose-cert-mounts.md
+    04-cloudflare-dns-ssl-validation.md
+    05-github-actions-cert-guardrails.md
+    06-security-hardening-and-audit.md
+    07-release-and-rollback.md
+  specs/
+    caddy-cloudflare-origin-cert-layout.md
+    cloudflare-origin-routing-modes.md
+    caddy-websocket-requirements.md
+  templates/
+    Caddyfile.same-domain.cloudflare-origin.example
+    Caddyfile.subdomain.cloudflare-origin.example
+    docker-compose.caddy-origin-snippet.yml
+    github-actions-cert-transfer-snippet.yml
+    cloudflare-origin-readme-template.md
+  runbooks/
+    cloudflare-origin-cert-rotation.md
+    caddy-origin-deployment.md
+    caddy-origin-rollback.md
+  checklists/
+    cloudflare-origin-ssl-checklist.md
+    caddy-websocket-checklist.md
+    cert-secret-handling-checklist.md
+  audits/
+    caddy-route-contract-audit.md
+    cloudflare-origin-security-audit.md
+  scripts/
+    validate-caddy-origin-pack.ps1
+    validate-caddy-origin-pack.sh
+    smoke-caddy-origin.ps1
+    smoke-caddy-origin.sh
+  runner/
+    caddy-origin-manifest.json
+```

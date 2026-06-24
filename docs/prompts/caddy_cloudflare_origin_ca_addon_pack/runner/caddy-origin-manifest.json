@@ -1,0 +1,32 @@
+{
+  "project": "mainecybertech-chat",
+  "pack": "caddy-cloudflare-origin-ca-addon-pack",
+  "version": "1.0.0",
+  "recommendedPath": "docs/prompts/caddy_cloudflare_origin_ca_addon_pack",
+  "runtimeCertPaths": {
+    "hostCert": "/opt/chat/certs/cloudflare-origin.pem",
+    "hostKey": "/opt/chat/certs/cloudflare-origin-key.pem",
+    "containerCert": "/certs/cloudflare-origin.pem",
+    "containerKey": "/certs/cloudflare-origin-key.pem"
+  },
+  "prompts": [
+    "prompts/00-master-caddy-cloudflare-origin-prompt.md",
+    "prompts/01-repo-inspection-and-route-contract.md",
+    "prompts/02-caddy-origin-ca-implementation.md",
+    "prompts/03-docker-compose-cert-mounts.md",
+    "prompts/04-cloudflare-dns-ssl-validation.md",
+    "prompts/05-github-actions-cert-guardrails.md",
+    "prompts/06-security-hardening-and-audit.md",
+    "prompts/07-release-and-rollback.md"
+  ],
+  "qualityGates": [
+    "repo route contract report",
+    "caddy validate",
+    "docker compose config",
+    "no cert/key committed",
+    "api health smoke test",
+    "websocket smoke test",
+    "security audit"
+  ],
+  "applyPolicy": "Do not restart production Caddy until validation and rollback steps are documented."
+}

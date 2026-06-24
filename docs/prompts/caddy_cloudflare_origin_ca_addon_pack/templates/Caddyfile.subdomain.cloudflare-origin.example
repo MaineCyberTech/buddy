@@ -1,0 +1,31 @@
+{
+    auto_https off
+}
+
+chat.mainecybertech.us, chat.mainecybertech.com {
+    tls /certs/cloudflare-origin.pem /certs/cloudflare-origin-key.pem
+    encode zstd gzip
+
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+
+    reverse_proxy web:3000
+}
+
+chat-api.mainecybertech.us, chat-api.mainecybertech.com {
+    tls /certs/cloudflare-origin.pem /certs/cloudflare-origin-key.pem
+    encode zstd gzip
+
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+
+    reverse_proxy api:4000
+}

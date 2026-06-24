@@ -1,0 +1,21 @@
+{
+    auto_https off
+}
+
+chat.mainecybertech.us, chat.mainecybertech.com {
+    tls /certs/cloudflare-origin.pem /certs/cloudflare-origin-key.pem
+
+    encode zstd gzip
+
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+
+    @api path /health* /auth* /workspaces* /channels* /messages* /notifications* /preferences* /reactions* /webhooks* /feature-flags* /metrics* /socket.io*
+    reverse_proxy @api api:4000
+
+    reverse_proxy web:3000
+}

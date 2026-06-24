@@ -1,0 +1,29 @@
+{
+  "project": "cloudflare-do-infrastructure",
+  "version": "1.0.0",
+  "target": "Cloudflare + DigitalOcean infrastructure similar to existing chat setup",
+  "prompts": [
+    "prompts/00-master-infrastructure-build-prompt.md",
+    "prompts/01-repo-discovery-and-current-state.md",
+    "prompts/02-infrastructure-architecture-plan.md",
+    "prompts/03-terraform-opentofu-foundation.md",
+    "prompts/04-digitalocean-compute-networking.md",
+    "prompts/05-cloudflare-dns-security-tunnels.md",
+    "prompts/06-traefik-docker-compose-runtime.md",
+    "prompts/07-github-actions-cicd.md",
+    "prompts/08-secrets-env-runbooks.md",
+    "prompts/09-validation-local-and-remote-smoke-tests.md",
+    "prompts/10-security-hardening-audit.md",
+    "prompts/11-dev-prod-promotion-release.md"
+  ],
+  "qualityGates": [
+    "repo discovery",
+    "architecture plan",
+    "terraform fmt",
+    "terraform validate",
+    "plan",
+    "no secrets",
+    "security audit"
+  ],
+  "applyPolicy": "Terraform/OpenTofu apply must be gated and operator-approved"
+}

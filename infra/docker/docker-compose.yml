@@ -1,0 +1,64 @@
+services:
+  traefik:
+    image: traefik:v3.0
+    container_name: buddy-traefik
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - buddy
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - CF_API_EMAIL=${CF_API_EMAIL:-}
+      - CF_DNS_API_TOKEN=${CF_DNS_API_TOKEN:-}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/traefik.yml:/traefik.yml:ro
+      - ./traefik/dynamic.yml:/dynamic.yml:ro
+      - traefik-certificates:/letsencrypt
+    labels:
+      - "traefik.enable=true"
+
+  app:
+    build:
+      context: ../../
+      dockerfile: infra/docker/app.Dockerfile
+    container_name: buddy-app
+    restart: unless-stopped
+    networks:
+      - buddy
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL:-}
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.app.rule=Host(`${APP_DOMAIN}`)"
+      - "traefik.http.routers.app.entrypoints=websecure"
+      - "traefik.http.routers.app.tls=true"
+      - "traefik.http.routers.app.tls.certresolver=letsencrypt"
+      - "traefik.http.services.app.loadbalancer.server.port=3000"
+      - "traefik.http.middlewares.app-headers.headers.customrequestheaders.X-Forwarded-Proto=https"
+    depends_on:
+      - traefik
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: buddy-cloudflared
+    restart: unless-stopped
+    command: tunnel run
+    environment:
+      - TUNNEL_TOKEN=${TUNNEL_TOKEN:-}
+    profiles:
+      - tunnel
+    networks:
+      - buddy
+
+networks:
+  buddy:
+    driver: bridge
+
+volumes:
+  traefik-certificates:
