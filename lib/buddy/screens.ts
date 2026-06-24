@@ -1,1 +1,1 @@
-export type GameScreen = 'boot' | 'hatch' | 'main' | 'profile' | 'stats';
+export type GameScreen = 'boot' | 'hatch' | 'main' | 'profile' | 'stats' | 'home';

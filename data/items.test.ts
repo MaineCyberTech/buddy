@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ITEMS, ITEM_MAP, FOOD_ITEMS, TOY_ITEMS, HAT_ITEMS, MEDICINE_ITEMS, MATERIAL_ITEMS, SKILL_BOOK_ITEMS } from '@/data/items';
+import { ITEMS, ITEM_MAP, FOOD_ITEMS, TOY_ITEMS, HAT_ITEMS, MEDICINE_ITEMS, MATERIAL_ITEMS, SKILL_BOOK_ITEMS, DECOR_ITEMS } from '@/data/items';
 import { LOOT_TABLES, LOOT_TABLE_MAP } from '@/data/loot-tables';
 import { LOCATIONS } from '@/data/locations';
 
@@ -53,6 +53,10 @@ describe('Item System', () => {
 
     it('has at least 3 skill book items', () => {
       expect(SKILL_BOOK_ITEMS.length).toBeGreaterThanOrEqual(3);
+    });
+
+    it('has at least 10 decor items', () => {
+      expect(DECOR_ITEMS.length).toBeGreaterThanOrEqual(10);
     });
   });
 

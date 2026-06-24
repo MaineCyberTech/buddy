@@ -9,12 +9,13 @@ import { LcdDisplay } from '@/components/device/LcdDisplay';
 import { StatBars, NeedBars } from '@/components/ui/StatBars';
 import { AdventureScreen } from '@/components/device/AdventureScreen';
 import { InventoryScreen } from '@/components/device/InventoryScreen';
+import { HomeScreen } from '@/components/device/HomeScreen';
 import { getStageName, checkEvolution } from '@/lib/progression/lifecycle';
 import { checkAchievements, ACHIEVEMENTS } from '@/data/achievements';
 
 interface MainDeviceProps {
   buddy: BuddyState;
-  initialTab?: 'main' | 'profile' | 'stats' | 'adventure' | 'inventory';
+  initialTab?: 'main' | 'profile' | 'stats' | 'adventure' | 'inventory' | 'home';
 }
 
 const ACTIONS: { type: CareActionType; label: string; icon: string }[] = [
@@ -29,7 +30,7 @@ const ACTIONS: { type: CareActionType; label: string; icon: string }[] = [
 
 export function MainDevice({ buddy: initialBuddy, initialTab = 'main' }: MainDeviceProps) {
   const [currentBuddy, setCurrentBuddy] = useState(initialBuddy);
-  const [tab, setTab] = useState<'main' | 'profile' | 'stats' | 'adventure' | 'inventory'>(initialTab);
+  const [tab, setTab] = useState<'main' | 'profile' | 'stats' | 'adventure' | 'inventory' | 'home'>(initialTab);
   const [message, setMessage] = useState('');
   const [messageKey, setMessageKey] = useState(0);
   const [autoSaveStatus, setAutoSaveStatus] = useState('');
@@ -97,13 +98,15 @@ export function MainDevice({ buddy: initialBuddy, initialTab = 'main' }: MainDev
       }
 
       try {
+        const storeState = useGameStore.getState();
         await saveGame({
           version: 2,
-          guestId: useGameStore.getState().guestId,
+          guestId: storeState.guestId,
           buddy: updated,
           createdAt: updated.identity.generatedAt,
           updatedAt: Date.now(),
-          inventory: useGameStore.getState().inventory,
+          inventory: storeState.inventory,
+          placedDecor: storeState.placedDecor,
         });
         setAutoSaveStatus('saved');
         setTimeout(() => setAutoSaveStatus(''), 2000);
@@ -211,6 +214,12 @@ export function MainDevice({ buddy: initialBuddy, initialTab = 'main' }: MainDev
             STATS
           </button>
           <button
+            onClick={() => setTab('home')}
+            className={`text-xs font-lcd focus-ring px-2 py-1 rounded ${tab === 'home' ? 'lcd-text-accent border-b border-lcd-accent' : 'lcd-text opacity-50'}`}
+          >
+            HOME
+          </button>
+          <button
             onClick={() => setTab('adventure')}
             className={`text-xs font-lcd focus-ring px-2 py-1 rounded ${tab === 'adventure' ? 'lcd-text-accent border-b border-lcd-accent' : 'lcd-text opacity-50'}`}
           >
@@ -268,6 +277,10 @@ export function MainDevice({ buddy: initialBuddy, initialTab = 'main' }: MainDev
 
         {tab === 'inventory' && (
           <InventoryScreen onBack={() => setTab('main')} />
+        )}
+
+        {tab === 'home' && (
+          <HomeScreen onBack={() => setTab('main')} />
         )}
       </div>
     </div>

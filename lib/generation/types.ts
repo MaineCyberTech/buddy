@@ -76,6 +76,32 @@ export interface BuddyState {
   progression: ProgressionState;
 }
 
+export interface HomeSlot {
+  id: string;
+  name: string;
+  slotType: string;
+  locked: boolean;
+}
+
+export interface DecorPlacement {
+  slotId: string;
+  itemId: string | null;
+}
+
+export const HOME_SLOTS: HomeSlot[] = [
+  { id: 'floor_left', name: 'Floor Left', slotType: 'floor', locked: false },
+  { id: 'floor_right', name: 'Floor Right', slotType: 'floor', locked: false },
+  { id: 'table', name: 'Table', slotType: 'table', locked: false },
+  { id: 'shelf', name: 'Shelf', slotType: 'shelf', locked: false },
+  { id: 'window', name: 'Window', slotType: 'window', locked: true },
+  { id: 'wall', name: 'Wall', slotType: 'wall', locked: true },
+];
+
+export const DEFAULT_PLACED_DECOR: DecorPlacement[] = HOME_SLOTS.map(s => ({
+  slotId: s.id,
+  itemId: null,
+}));
+
 export interface GameSave {
   version: number;
   buddy: BuddyState | null;
@@ -83,6 +109,7 @@ export interface GameSave {
   createdAt: number;
   updatedAt: number;
   inventory?: InventoryState;
+  placedDecor?: DecorPlacement[];
 }
 
 export const STAT_NAMES: StatName[] = ['courage', 'curiosity', 'playfulness', 'discipline', 'empathy'];
@@ -133,6 +160,7 @@ export interface ItemDefinition {
   sellValue: number;
   effect?: string;
   flavorText: string;
+  placementSlot?: string;
 }
 
 export interface LootTableEntry {

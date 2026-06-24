@@ -20,6 +20,9 @@ export default function HomePage() {
           if (save.inventory) {
             useGameStore.getState().setInventory(save.inventory);
           }
+          if (save.placedDecor) {
+            useGameStore.getState().setPlacedDecor(save.placedDecor);
+          }
           setScreen('main');
         } else {
           setScreen('hatch');
@@ -32,6 +35,7 @@ export default function HomePage() {
         () => useGameStore.getState().buddy,
         () => useGameStore.getState().inventory,
         () => useGameStore.getState().guestId,
+        () => useGameStore.getState().placedDecor,
       );
     };
     init();

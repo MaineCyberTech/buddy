@@ -1,4 +1,4 @@
-import { BuddyState, InventoryState } from '@/lib/generation/types';
+import { BuddyState, InventoryState, DecorPlacement } from '@/lib/generation/types';
 import { saveGame } from '@/lib/storage/indexeddb';
 
 let autosaveTimer: ReturnType<typeof setInterval> | null = null;
@@ -7,6 +7,7 @@ export function startAutosave(
   getBuddy: () => BuddyState | null,
   getInventory: () => InventoryState,
   getGuestId: () => string,
+  getPlacedDecor?: () => DecorPlacement[],
   intervalMs: number = 10000
 ): void {
   stopAutosave();
@@ -23,6 +24,7 @@ export function startAutosave(
         createdAt: buddy.identity.generatedAt,
         updatedAt: Date.now(),
         inventory: getInventory(),
+        placedDecor: getPlacedDecor ? getPlacedDecor() : undefined,
       });
     } catch (error) {
       console.error('Autosave failed:', error);
