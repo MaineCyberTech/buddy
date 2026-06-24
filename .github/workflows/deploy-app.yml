@@ -27,18 +27,16 @@ jobs:
 
       - name: Copy Infra Files
         run: |
-          ssh root@${{ secrets.DROPLET_IP }} "mkdir -p /opt/buddy"
+          ssh root@${{ secrets.DROPLET_IP }} "mkdir -p /opt/buddy/certs"
           scp -r infra/docker/* root@${{ secrets.DROPLET_IP }}:/opt/buddy/
 
       - name: Deploy Stack
         run: |
           ssh root@${{ secrets.DROPLET_IP }} "cd /opt/buddy && \
-            APP_DOMAIN=${{ secrets.APP_DOMAIN }} \
-            API_DOMAIN=${{ secrets.API_DOMAIN }} \
             NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }} \
             NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }} \
-            docker compose pull && \
-            docker compose up -d --remove-orphans"
+            docker compose -f docker-compose.${{ github.ref_name == 'main' && 'prod' || 'devremote' }}.yml pull && \
+            docker compose -f docker-compose.${{ github.ref_name == 'main' && 'prod' || 'devremote' }}.yml up -d --remove-orphans"
 
       - name: Health Check
         run: |

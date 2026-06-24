@@ -1,0 +1,51 @@
+name: Caddy Cert Guardrails
+
+on:
+  pull_request:
+    paths:
+      - 'infra/docker/certs/**'
+      - 'infra/docker/Caddyfile*'
+      - 'infra/docker/docker-compose*.yml'
+      - '.github/workflows/caddy-cert-guardrails.yml'
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Block PEM Cert Commits
+        run: |
+          if git diff --cached --name-only | Select-String -Pattern '\.pem$'; then
+            echo "❌ ERROR: PEM certificate files detected in commit."
+            echo "Certificates and private keys must never be committed."
+            echo "Use GH Secrets + SCP for cert deployment."
+            exit 1
+          fi
+        shell: pwsh
+
+      - name: Block Key File Commits
+        run: |
+          if git diff --cached --name-only | Select-String -Pattern 'key\.(pem|key|txt|p12)$'; then
+            echo "❌ ERROR: Private key file detected in commit."
+            exit 1
+          fi
+        shell: pwsh
+
+      - name: Block Sensitive Patterns
+        run: |
+          if git diff --cached -U0 | Select-String -Pattern 'PRIVATE KEY' | Select-String -Pattern '^\+'; then
+            echo "❌ ERROR: Private key content detected in diff."
+            exit 1
+          fi
+        shell: pwsh
+
+      - name: Validate Caddyfile Syntax
+        run: |
+          docker run --rm -v ${{ github.workspace }}/infra/docker:/work caddy:2-alpine caddy validate --config /work/Caddyfile
+        if: github.ref_name == 'develop'
+
+      - name: Validate Caddyfile.prod Syntax
+        run: |
+          docker run --rm -v ${{ github.workspace }}/infra/docker:/work caddy:2-alpine caddy validate --config /work/Caddyfile.prod
+        if: github.ref_name == 'main'

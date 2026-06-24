@@ -1,7 +1,9 @@
+name: buddy-dev
+
 services:
   caddy:
     image: caddy:2-alpine
-    container_name: buddy-caddy
+    container_name: buddy-caddy-dev
     restart: unless-stopped
     mem_limit: 64m
     ports:
@@ -13,7 +15,7 @@ services:
       - caddy-data:/data
       - caddy-config:/config
     networks:
-      - buddy
+      - buddy-dev
     depends_on:
       - app
 
@@ -21,17 +23,18 @@ services:
     build:
       context: ../../
       dockerfile: infra/docker/app.Dockerfile
-    container_name: buddy-app
+    container_name: buddy-app-dev
     restart: unless-stopped
-    networks:
-      - buddy
+    mem_limit: 256m
     environment:
       - NODE_ENV=production
       - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL:-}
       - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}
+    networks:
+      - buddy-dev
 
 networks:
-  buddy:
+  buddy-dev:
     driver: bridge
 
 volumes:

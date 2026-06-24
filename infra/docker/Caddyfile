@@ -1,0 +1,20 @@
+buddy.mainecybertech.us {
+    tls /etc/caddy/certs/fullchain.pem /etc/caddy/certs/privkey.pem
+    reverse_proxy app:3000
+    header {
+        X-Frame-Options "DENY"
+        X-Content-Type-Options "nosniff"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        Permissions-Policy "camera=(), microphone=(), geolocation=()"
+    }
+}
+
+buddy-api.mainecybertech.us {
+    tls /etc/caddy/certs/fullchain.pem /etc/caddy/certs/privkey.pem
+    reverse_proxy app:3000
+    header {
+        X-Frame-Options "DENY"
+        X-Content-Type-Options "nosniff"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+}

@@ -1,19 +1,21 @@
+name: buddy-prod
+
 services:
   caddy:
     image: caddy:2-alpine
-    container_name: buddy-caddy
+    container_name: buddy-caddy-prod
     restart: unless-stopped
     mem_limit: 64m
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./Caddyfile.prod:/etc/caddy/Caddyfile
       - ./certs:/etc/caddy/certs:ro
       - caddy-data:/data
       - caddy-config:/config
     networks:
-      - buddy
+      - buddy-prod
     depends_on:
       - app
 
@@ -21,17 +23,18 @@ services:
     build:
       context: ../../
       dockerfile: infra/docker/app.Dockerfile
-    container_name: buddy-app
+    container_name: buddy-app-prod
     restart: unless-stopped
-    networks:
-      - buddy
+    mem_limit: 512m
     environment:
       - NODE_ENV=production
       - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL:-}
       - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}
+    networks:
+      - buddy-prod
 
 networks:
-  buddy:
+  buddy-prod:
     driver: bridge
 
 volumes:

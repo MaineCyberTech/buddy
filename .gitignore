@@ -5,3 +5,5 @@ tsconfig.tsbuildinfo
 .env
 .env.local
 .env.*.local
+infra/docker/certs/*.pem
+infra/docker/certs/*.key
