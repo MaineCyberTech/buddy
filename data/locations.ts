@@ -2,6 +2,19 @@ import { LocationDefinition } from '@/lib/generation/types';
 
 export const LOCATIONS: LocationDefinition[] = [
   {
+    id: 'main_house',
+    name: 'Main House',
+    description: 'Your cozy home. Rest, relax, and spend time with your buddy.',
+    energyCost: 0,
+    requiresAccount: false,
+    statChecks: {},
+    lootTableId: 'none',
+    backgroundAscii: ['  🏠    ', '  |  |  ', '  |__|  ', '  ||||  '],
+    encounterPool: ['Your buddy snuggles up to you.', 'A warm fireplace crackles.', 'Rain patters on the roof.'],
+    flavorText: 'There is no place like home.',
+    riskProfile: 'safe',
+  },
+  {
     id: 'backyard',
     name: 'Backyard',
     description: 'A sunny fenced yard with flowers and a tiny pond.',

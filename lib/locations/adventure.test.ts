@@ -18,8 +18,8 @@ function createTestState(): { buddy: BuddyState; inventory: InventoryState } {
 
 describe('Adventure System', () => {
   describe('Locations', () => {
-    it('has 9 locations', () => {
-      expect(LOCATIONS).toHaveLength(9);
+    it('has 10 locations', () => {
+      expect(LOCATIONS).toHaveLength(10);
     });
 
     it('all locations have valid loot tables', () => {
@@ -28,9 +28,11 @@ describe('Adventure System', () => {
       }
     });
 
-    it('all locations have energy costs', () => {
+    it('all explorable locations have energy costs', () => {
       for (const loc of LOCATIONS) {
-        expect(loc.energyCost).toBeGreaterThan(0);
+        if (loc.id !== 'main_house') {
+          expect(loc.energyCost).toBeGreaterThan(0);
+        }
       }
     });
 
@@ -38,6 +40,22 @@ describe('Adventure System', () => {
       for (const loc of LOCATIONS) {
         expect(loc.encounterPool.length).toBeGreaterThan(0);
       }
+    });
+
+    it('market requires account', () => {
+      const market = LOCATIONS.find(l => l.id === 'market');
+      expect(market?.requiresAccount).toBe(true);
+    });
+
+    it('guest locations exclude requiresAccount locations', () => {
+      const guestLocs = LOCATIONS.filter(l => !l.requiresAccount);
+      expect(guestLocs.every(l => !l.requiresAccount)).toBe(true);
+      expect(guestLocs.some(l => l.id === 'market')).toBe(false);
+    });
+
+    it('main house has zero energy cost', () => {
+      const house = LOCATIONS.find(l => l.id === 'main_house');
+      expect(house?.energyCost).toBe(0);
     });
   });
 

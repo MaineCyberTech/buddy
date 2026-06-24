@@ -2,6 +2,13 @@ import { LootTable } from '@/lib/generation/types';
 
 export const LOOT_TABLES: LootTable[] = [
   {
+    id: 'none',
+    coinMin: 0,
+    coinMax: 0,
+    xpGain: 0,
+    entries: [],
+  },
+  {
     id: 'backyard_loot',
     coinMin: 1,
     coinMax: 5,

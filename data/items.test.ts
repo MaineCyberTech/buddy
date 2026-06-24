@@ -64,10 +64,14 @@ describe('Item System', () => {
 
     it('each loot table has entries', () => {
       for (const table of LOOT_TABLES) {
-        expect(table.entries.length).toBeGreaterThan(0);
+        if (table.id === 'none') {
+          expect(table.entries.length).toBe(0);
+        } else {
+          expect(table.entries.length).toBeGreaterThan(0);
+          expect(table.xpGain).toBeGreaterThan(0);
+        }
         expect(table.coinMin).toBeGreaterThanOrEqual(0);
         expect(table.coinMax).toBeGreaterThanOrEqual(table.coinMin);
-        expect(table.xpGain).toBeGreaterThan(0);
       }
     });
 

@@ -18,11 +18,22 @@ export function AdventureScreen({ onBack }: AdventureScreenProps) {
   const [selectedLocation, setSelectedLocation] = useState<LocationDefinition | null>(null);
   const [result, setResult] = useState<AdventureResult | null>(null);
   const [loading, setLoading] = useState(false);
+  const [gateMessage, setGateMessage] = useState('');
 
-  const availableLocations = LOCATIONS;
+  const isGuest = guestId.startsWith('guest-');
+  const availableLocations = isGuest
+    ? LOCATIONS.filter(l => !l.requiresAccount)
+    : LOCATIONS;
 
   const handleAdventure = useCallback(async (location: LocationDefinition) => {
     if (!buddy) return;
+
+    if (isGuest && location.requiresAccount) {
+      setGateMessage(`Create an account to explore ${location.name}! Sign up to unlock all locations, cloud saves, and more.`);
+      setTimeout(() => setGateMessage(''), 4000);
+      return;
+    }
+
     setSelectedLocation(location);
     setLoading(true);
 
@@ -81,7 +92,7 @@ export function AdventureScreen({ onBack }: AdventureScreenProps) {
     } catch (err) {
       console.error('Save after adventure failed:', err);
     }
-  }, [buddy, inventory, setBuddy, setInventory, setCurrentAdventureResult, guestId]);
+  }, [buddy, inventory, setBuddy, setInventory, setCurrentAdventureResult, guestId, isGuest]);
 
   const handleBack = useCallback(() => {
     setSelectedLocation(null);
@@ -132,7 +143,17 @@ export function AdventureScreen({ onBack }: AdventureScreenProps) {
 
   return (
     <div className="animate-fade-in space-y-2">
-      <p className="text-xs lcd-text-accent uppercase tracking-wider mb-2">Locations</p>
+      <p className="text-xs lcd-text-accent uppercase tracking-wider mb-2">
+        {isGuest ? 'Guest Locations' : 'Locations'}
+      </p>
+      {gateMessage && (
+        <div className="text-xs rarity-shiny animate-fade-in px-2 py-1" role="status" aria-live="polite">
+          {gateMessage}
+        </div>
+      )}
+      {isGuest && (
+        <p className="text-[10px] lcd-text-warn opacity-70">Some locations require an account.</p>
+      )}
       <div className="space-y-1.5">
         {availableLocations.map((loc) => {
           const energyOk = buddy ? buddy.needs.energy >= loc.energyCost : false;
