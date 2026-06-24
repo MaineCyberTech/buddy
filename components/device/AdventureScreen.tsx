@@ -6,6 +6,8 @@ import { runAdventure, applyAdventureResult } from '@/lib/locations/adventure';
 import { LOCATIONS } from '@/data/locations';
 import { LocationDefinition, AdventureResult } from '@/lib/generation/types';
 import { saveGame } from '@/lib/storage/indexeddb';
+import { checkEvolution, getStageName } from '@/lib/progression/lifecycle';
+import { checkAchievements } from '@/data/achievements';
 
 interface AdventureScreenProps {
   onBack: () => void;
@@ -35,6 +37,31 @@ export function AdventureScreen({ onBack }: AdventureScreenProps) {
       ? { ...updatedBuddy.progression, totalAdventures: updatedBuddy.progression.totalAdventures + 1 }
       : undefined;
     if (newProgression) updatedBuddy.progression = newProgression;
+
+    const evolvedStage = checkEvolution(updatedBuddy);
+    if (evolvedStage && updatedBuddy.progression) {
+      updatedBuddy.progression = { ...updatedBuddy.progression, lifecycle: evolvedStage };
+      adventureResult.message += ` ${getStageName(evolvedStage)} stage unlocked!`;
+    }
+
+    const unlocked = updatedBuddy.progression?.achievements || [];
+    const totalAdv = updatedBuddy.progression?.totalAdventures || 0;
+    const newAchievements = checkAchievements(updatedBuddy, updatedInv, totalAdv, unlocked);
+    if (newAchievements.length > 0) {
+      const ids = newAchievements.map(a => a.id);
+      if (updatedBuddy.progression) {
+        updatedBuddy.progression = { ...updatedBuddy.progression, achievements: [...unlocked, ...ids] };
+      }
+      let coinReward = 0;
+      for (const a of newAchievements) {
+        coinReward += a.rewardCoins || 0;
+        if (a.rewardItemId) {
+          updatedInv.items.push({ id: a.rewardItemId, quantity: 1 });
+        }
+      }
+      updatedInv.coins += coinReward;
+      adventureResult.message += ` Achievement: ${newAchievements.map(a => a.name).join(', ')}!`;
+    }
 
     setBuddy(updatedBuddy);
     setInventory(updatedInv);

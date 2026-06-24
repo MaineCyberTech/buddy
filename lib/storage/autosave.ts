@@ -6,10 +6,10 @@ let autosaveTimer: ReturnType<typeof setInterval> | null = null;
 export function startAutosave(
   getBuddy: () => BuddyState | null,
   getInventory: () => InventoryState,
+  getGuestId: () => string,
   intervalMs: number = 10000
 ): void {
   stopAutosave();
-  const guestId = 'guest-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 
   autosaveTimer = setInterval(async () => {
     const buddy = getBuddy();
@@ -17,9 +17,9 @@ export function startAutosave(
 
     try {
       await saveGame({
-        version: 1,
+        version: 2,
         buddy,
-        guestId,
+        guestId: getGuestId(),
         createdAt: buddy.identity.generatedAt,
         updatedAt: Date.now(),
         inventory: getInventory(),

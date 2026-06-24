@@ -92,6 +92,12 @@ export function applyAction(buddy: BuddyState, action: CareActionType): { buddy:
       break;
     }
     case 'heal': {
+      if (buddy.health >= 100) {
+        return {
+          buddy,
+          result: { message: 'Already healthy!', moodChange: 0, bondChange: 0, xpGain: 0, healthChange: 0 },
+        };
+      }
       const healAmount = Math.round(30 * mod);
       newBuddy.health = Math.min(100, buddy.health + healAmount);
       newNeeds.energy = Math.max(0, newNeeds.energy - 10);

@@ -9,7 +9,8 @@ import { LcdDisplay } from '@/components/device/LcdDisplay';
 import { StatBars, NeedBars } from '@/components/ui/StatBars';
 import { AdventureScreen } from '@/components/device/AdventureScreen';
 import { InventoryScreen } from '@/components/device/InventoryScreen';
-import { getStageName, getStageProgress } from '@/lib/progression/lifecycle';
+import { getStageName, checkEvolution } from '@/lib/progression/lifecycle';
+import { checkAchievements, ACHIEVEMENTS } from '@/data/achievements';
 
 interface MainDeviceProps {
   buddy: BuddyState;
@@ -32,6 +33,8 @@ export function MainDevice({ buddy: initialBuddy, initialTab = 'main' }: MainDev
   const [message, setMessage] = useState('');
   const [messageKey, setMessageKey] = useState(0);
   const [autoSaveStatus, setAutoSaveStatus] = useState('');
+  const [achievementMessage, setAchievementMessage] = useState('');
+  const [achievementKey, setAchievementKey] = useState(0);
   const updateBuddy = useGameStore((s) => s.updateBuddy);
   const buddyRef = useRef(initialBuddy);
 
@@ -50,20 +53,58 @@ export function MainDevice({ buddy: initialBuddy, initialTab = 'main' }: MainDev
   const handleAction = useCallback(
     async (action: CareActionType) => {
       const { buddy: updated, result } = applyAction(currentBuddy, action);
+
+      const evolvedStage = checkEvolution(updated);
+      if (evolvedStage) {
+        const progression = updated.progression
+          ? { ...updated.progression, lifecycle: evolvedStage }
+          : { lifecycle: evolvedStage, age: 0, skills: { exploring: 0, training: 0, social: 0, crafting: 0, cooking: 0 }, bondLevel: 1, totalAdventures: 0, memories: [], achievements: [], careQuality: 1.0 };
+        updated.progression = progression;
+        setMessage(`${getStageName(evolvedStage)} stage unlocked!`);
+      }
+
       setCurrentBuddy(updated);
       updateBuddy(updated);
-      setMessage(result.message);
+
+      if (!evolvedStage) {
+        setMessage(result.message);
+      }
       setMessageKey((k) => k + 1);
 
+      const inv = useGameStore.getState().inventory;
+      const unlocked = updated.progression?.achievements || [];
+      const totalAdv = updated.progression?.totalAdventures || 0;
+      const newAchievements = checkAchievements(updated, inv, totalAdv, unlocked);
+      if (newAchievements.length > 0) {
+        const ids = newAchievements.map(a => a.id);
+        const updatedProgression = updated.progression
+          ? { ...updated.progression, achievements: [...unlocked, ...ids] }
+          : updated.progression;
+        if (updatedProgression) updated.progression = updatedProgression;
+        let coinReward = 0;
+        for (const a of newAchievements) {
+          coinReward += a.rewardCoins || 0;
+          if (a.rewardItemId) {
+            useGameStore.getState().addItem(a.rewardItemId, 1);
+          }
+        }
+        if (coinReward > 0) {
+          useGameStore.getState().addCoins(coinReward);
+        }
+        const names = newAchievements.map(a => a.name).join(', ');
+        setAchievementMessage(`Achievement unlocked: ${names}${coinReward > 0 ? ` (+${coinReward} coins)` : ''}`);
+        setAchievementKey((k) => k + 1);
+        setTimeout(() => setAchievementMessage(''), 5000);
+      }
+
       try {
-        const inv = useGameStore.getState().inventory;
         await saveGame({
           version: 2,
           guestId: useGameStore.getState().guestId,
           buddy: updated,
           createdAt: updated.identity.generatedAt,
           updatedAt: Date.now(),
-          inventory: inv,
+          inventory: useGameStore.getState().inventory,
         });
         setAutoSaveStatus('saved');
         setTimeout(() => setAutoSaveStatus(''), 2000);
@@ -112,6 +153,16 @@ export function MainDevice({ buddy: initialBuddy, initialTab = 'main' }: MainDev
             aria-live="polite"
           >
             {message}
+          </div>
+        )}
+        {achievementMessage && (
+          <div
+            key={achievementKey}
+            className="text-center text-sm rarity-shiny animate-fade-in px-2"
+            role="status"
+            aria-live="polite"
+          >
+            {achievementMessage}
           </div>
         )}
 

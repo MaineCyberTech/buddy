@@ -1,0 +1,33 @@
+{
+  "project": "buddy-virtual-pet",
+  "pack": "buddy-next-steps-dev-local-test-pack",
+  "version": "1.0.0",
+  "targetBranch": "dev",
+  "recommendedPath": "docs/prompts/buddy_next_steps_dev_local_test_pack",
+  "documents": [
+    "docs/01-current-state-validation.md",
+    "docs/02-local-browser-test-runbook.md",
+    "docs/03-quality-gate-checklist.md",
+    "docs/04-dev-branch-push-runbook.md",
+    "docs/05-next-milestone-plan.md"
+  ],
+  "prompts": [
+    "prompts/01-mvp-stabilization-agent-prompt.md",
+    "prompts/02-local-test-assistant-prompt.md",
+    "prompts/03-next-milestone-locations-adventures-loot.md"
+  ],
+  "scripts": [
+    "scripts/local-test.ps1",
+    "scripts/local-test.sh",
+    "scripts/push-dev.ps1",
+    "scripts/push-dev.sh"
+  ],
+  "qualityGate": [
+    "lint",
+    "typecheck",
+    "test",
+    "build",
+    "local-browser-smoke-test"
+  ],
+  "nextMilestone": "Locations, Adventures, and Loot"
+}

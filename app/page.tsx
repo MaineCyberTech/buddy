@@ -5,6 +5,7 @@ import { HatchFlow } from '@/components/hatch/HatchFlow';
 import { MainDevice } from '@/components/device/MainDevice';
 import { useGameStore } from '@/lib/buddy/store';
 import { loadGame, hasSave } from '@/lib/storage/indexeddb';
+import { startAutosave } from '@/lib/storage/autosave';
 
 export default function HomePage() {
   const [loaded, setLoaded] = useState(false);
@@ -27,6 +28,11 @@ export default function HomePage() {
         setScreen('hatch');
       }
       setLoaded(true);
+      startAutosave(
+        () => useGameStore.getState().buddy,
+        () => useGameStore.getState().inventory,
+        () => useGameStore.getState().guestId,
+      );
     };
     init();
   }, [setBuddy, setScreen]);

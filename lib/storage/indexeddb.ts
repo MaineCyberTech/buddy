@@ -46,10 +46,6 @@ export async function loadGame(): Promise<GameSave | null> {
 
     const save = entry.value as GameSave;
 
-    if (save.version !== 1) {
-      save.version = 1;
-    }
-
     return save;
   } catch (error) {
     console.error('Failed to load game:', error);
