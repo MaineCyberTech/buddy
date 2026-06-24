@@ -10,12 +10,15 @@ import { StatBars, NeedBars } from '@/components/ui/StatBars';
 import { AdventureScreen } from '@/components/device/AdventureScreen';
 import { InventoryScreen } from '@/components/device/InventoryScreen';
 import { HomeScreen } from '@/components/device/HomeScreen';
+import { SettingsScreen } from '@/components/device/SettingsScreen';
+import { AccountPrompt } from '@/components/device/AccountPrompt';
+import { LocalAuthService } from '@/lib/auth';
 import { getStageName, checkEvolution } from '@/lib/progression/lifecycle';
 import { checkAchievements, ACHIEVEMENTS } from '@/data/achievements';
 
 interface MainDeviceProps {
   buddy: BuddyState;
-  initialTab?: 'main' | 'profile' | 'stats' | 'adventure' | 'inventory' | 'home';
+  initialTab?: 'main' | 'profile' | 'stats' | 'adventure' | 'inventory' | 'home' | 'settings';
 }
 
 const ACTIONS: { type: CareActionType; label: string; icon: string }[] = [
@@ -30,12 +33,13 @@ const ACTIONS: { type: CareActionType; label: string; icon: string }[] = [
 
 export function MainDevice({ buddy: initialBuddy, initialTab = 'main' }: MainDeviceProps) {
   const [currentBuddy, setCurrentBuddy] = useState(initialBuddy);
-  const [tab, setTab] = useState<'main' | 'profile' | 'stats' | 'adventure' | 'inventory' | 'home'>(initialTab);
+  const [tab, setTab] = useState<'main' | 'profile' | 'stats' | 'adventure' | 'inventory' | 'home' | 'settings'>(initialTab);
   const [message, setMessage] = useState('');
   const [messageKey, setMessageKey] = useState(0);
   const [autoSaveStatus, setAutoSaveStatus] = useState('');
   const [achievementMessage, setAchievementMessage] = useState('');
   const [achievementKey, setAchievementKey] = useState(0);
+  const [accountPromptFeature, setAccountPromptFeature] = useState('');
   const updateBuddy = useGameStore((s) => s.updateBuddy);
 
   useEffect(() => {
@@ -220,6 +224,12 @@ export function MainDevice({ buddy: initialBuddy, initialTab = 'main' }: MainDev
             HOME
           </button>
           <button
+            onClick={() => setTab('settings')}
+            className={`text-xs font-lcd focus-ring px-2 py-1 rounded ${tab === 'settings' ? 'lcd-text-accent border-b border-lcd-accent' : 'lcd-text opacity-50'}`}
+          >
+            SETTINGS
+          </button>
+          <button
             onClick={() => setTab('adventure')}
             className={`text-xs font-lcd focus-ring px-2 py-1 rounded ${tab === 'adventure' ? 'lcd-text-accent border-b border-lcd-accent' : 'lcd-text opacity-50'}`}
           >
@@ -281,6 +291,26 @@ export function MainDevice({ buddy: initialBuddy, initialTab = 'main' }: MainDev
 
         {tab === 'home' && (
           <HomeScreen onBack={() => setTab('main')} />
+        )}
+
+        {tab === 'settings' && (
+          <SettingsScreen onBack={() => setTab('main')} />
+        )}
+
+        {accountPromptFeature && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+            <div className="bg-[#0a0a0f] border border-[#1a1a2e] rounded-lg max-w-sm w-full">
+              <AccountPrompt
+                feature={accountPromptFeature}
+                onClose={() => setAccountPromptFeature('')}
+                onComplete={() => {
+                  setAccountPromptFeature('');
+                  setMessage('Welcome! All features are now unlocked.');
+                  setMessageKey(k => k + 1);
+                }}
+              />
+            </div>
+          </div>
         )}
       </div>
     </div>
