@@ -85,6 +85,10 @@ export function getBondLevel(bond: number): number {
   return Math.floor(bond / 10) + 1;
 }
 
+export function levelUpXp(level: number): number {
+  return 50 + (level - 1) * 25;
+}
+
 export function getStageName(stage: LifecycleStage): string {
   const names: Record<LifecycleStage, string> = {
     egg: 'Egg',

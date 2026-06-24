@@ -3,7 +3,7 @@ export function hashString(str: string): number {
   for (let i = 0; i < str.length; i++) {
     const char = str.charCodeAt(i);
     hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
+    hash = hash >>> 0;
   }
   return Math.abs(hash);
 }
@@ -13,7 +13,7 @@ export function hashCombine(...values: (string | number)[]): number {
   for (const value of values) {
     const num = typeof value === 'string' ? hashString(value) : value;
     hash = ((hash << 5) - hash) + num;
-    hash = hash & hash;
+    hash = hash >>> 0;
   }
   return Math.abs(hash);
 }

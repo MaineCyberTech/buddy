@@ -1,4 +1,5 @@
 import { BuddyState, BuddyNeeds } from '@/lib/generation/types';
+import { levelUpXp } from '@/lib/progression/lifecycle';
 
 export type CareActionType = 'feed' | 'play' | 'wash' | 'rest' | 'talk' | 'train' | 'heal';
 
@@ -30,7 +31,11 @@ export function applyAction(buddy: BuddyState, action: CareActionType): { buddy:
   const now = Date.now();
 
   const personalityMods = buddy.personality.careModifiers;
-  const mod = personalityMods[action === 'feed' ? 'hunger' : 'happiness'] || 1;
+  const modifierKeys: Record<CareActionType, string> = {
+    feed: 'hunger', play: 'happiness', wash: 'cleanliness',
+    rest: 'energy', talk: 'social', train: 'discipline', heal: 'empathy',
+  };
+  const mod = personalityMods[modifierKeys[action]] || 1;
 
   let message: string;
   let moodChange = 0;
@@ -137,10 +142,6 @@ export function applyAction(buddy: BuddyState, action: CareActionType): { buddy:
       healthChange,
     },
   };
-}
-
-function levelUpXp(level: number): number {
-  return 50 + (level - 1) * 25;
 }
 
 export function recalculateMood(buddy: BuddyState): BuddyState['mood'] {

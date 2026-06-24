@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useGameStore } from '@/lib/buddy/store';
 import { createInitialBuddyState } from '@/lib/generation/engine';
 import { saveGame } from '@/lib/storage/indexeddb';
@@ -11,6 +11,11 @@ export function HatchFlow() {
   const [nickname, setNickname] = useState('');
   const setBuddy = useGameStore((s) => s.setBuddy);
   const setScreen = useGameStore((s) => s.setScreen);
+  const hatchTimer = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(() => {
+    return () => clearTimeout(hatchTimer.current);
+  }, []);
 
   const handleHatch = useCallback(() => {
     setStep('hatching');
@@ -18,7 +23,7 @@ export function HatchFlow() {
     const buddy = createInitialBuddyState(guestId);
     setNewBuddy(buddy);
     useGameStore.getState().setGuestId(guestId);
-    setTimeout(() => setStep('reveal'), 2000);
+    hatchTimer.current = setTimeout(() => setStep('reveal'), 2000);
   }, []);
 
   const handleConfirm = useCallback(async () => {

@@ -42,9 +42,16 @@ export const useGameStore = create<GameStore>((set) => ({
   setGuestId: (guestId) => set({ guestId }),
   setIsOnline: (isOnline) => set({ isOnline }),
   updateBuddy: (updates) =>
-    set((state) => ({
-      buddy: state.buddy ? { ...state.buddy, ...updates } : null,
-    })),
+    set((state) => {
+      if (!state.buddy) return state;
+      const merged = { ...state.buddy, ...updates };
+      if (updates.needs) merged.needs = { ...state.buddy.needs, ...updates.needs };
+      if (updates.stats) merged.stats = { ...state.buddy.stats, ...updates.stats };
+      if (updates.progression && state.buddy.progression) {
+        merged.progression = { ...state.buddy.progression, ...updates.progression };
+      }
+      return { buddy: merged };
+    }),
   setInventory: (inventory) => set({ inventory }),
   addCoins: (amount) =>
     set((state) => ({

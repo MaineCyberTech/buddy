@@ -6,6 +6,7 @@ import {
 } from '@/lib/generation/types';
 import { LOCATION_MAP } from '@/data/locations';
 import { LOOT_TABLE_MAP } from '@/data/loot-tables';
+import { levelUpXp } from '@/lib/progression/lifecycle';
 
 function rollLoot(rng: SeededRNG, lootTableId: string): { coins: number; items: { id: string; quantity: number }[]; xpGain: number } {
   const table = LOOT_TABLE_MAP.get(lootTableId);
@@ -29,10 +30,12 @@ function calculateSuccess(
   buddy: BuddyState,
   location: import('@/lib/generation/types').LocationDefinition
 ): boolean {
+  const statKeys = Object.keys(location.statChecks) as (keyof typeof location.statChecks)[];
+  if (statKeys.length === 0) return true;
   let checkScore = 0;
   let totalWeight = 0;
 
-  for (const statName of Object.keys(location.statChecks) as (keyof typeof location.statChecks)[]) {
+  for (const statName of statKeys) {
     const required = location.statChecks[statName] || 0;
     const actual = buddy.stats[statName as keyof typeof buddy.stats] || 0;
     const ratio = actual / Math.max(1, required);
@@ -40,7 +43,7 @@ function calculateSuccess(
     totalWeight += 1;
   }
 
-  const avgRatio = checkScore / Math.max(1, totalWeight);
+  const avgRatio = checkScore / totalWeight;
   const baseChance = Math.min(0.95, avgRatio * 0.7);
 
   const luckModifier = rng.next() * 0.3;
@@ -161,6 +164,3 @@ export function applyAdventureResult(
   };
 }
 
-function levelUpXp(level: number): number {
-  return 50 + (level - 1) * 25;
-}

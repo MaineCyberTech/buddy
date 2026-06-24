@@ -42,16 +42,23 @@ export function LcdDisplay({ buddy, animate = true, className = '' }: LcdDisplay
 
 function composeSprite(base: string[], eyes: string, hat: string): string[] {
   const result = [...base];
-  const eyeSymbols = eyes.split(' ');
-  const defaultEyes = 'o o'.split(' ');
+  let eyeParts = eyes.split(' ');
+  if (eyeParts.length < 2 || eyes.trim() === '') eyeParts = ['o', 'o'];
 
+  let replaced = false;
   for (let i = 0; i < result.length; i++) {
-    if (i === 1 && eyeSymbols.length >= 2) {
-      result[i] = result[i]
-        .replace(/\([^)]+\)/, `(${eyeSymbols[0]} ${eyeSymbols[1]})`)
-        .replace(/<[^>]+>/, `<${eyeSymbols[0]} ${eyeSymbols[1]}>`)
-        .replace(/\[[^\]]+\]/, `[${eyeSymbols[0]} ${eyeSymbols[1]}]`);
+    const original = result[i];
+    result[i] = result[i]
+      .replace(/\([^)]+\)/, `(${eyeParts[0]} ${eyeParts[1]})`)
+      .replace(/<[^>]+>/, `<${eyeParts[0]} ${eyeParts[1]}>`)
+      .replace(/\[[^\]]+\]/, `[${eyeParts[0]} ${eyeParts[1]}]`);
+    if (result[i] !== original) {
+      replaced = true;
     }
+  }
+
+  if (!replaced && result.length > 1) {
+    result[1] = result[1].replace(/\.\./g, `${eyeParts[0]}${eyeParts[1]}`);
   }
 
   if (hat !== 'none' && result.length > 0) {

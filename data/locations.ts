@@ -137,3 +137,4 @@ export const LOCATION_MAP = new Map(LOCATIONS.map(l => [l.id, l]));
 
 export const SAFE_LOCATIONS = LOCATIONS.filter(l => l.riskProfile === 'safe' && !l.requiresAccount);
 export const GUEST_LOCATIONS = LOCATIONS.filter(l => !l.requiresAccount);
+export const EXPLORE_LOCATIONS = LOCATIONS.filter(l => l.id !== 'main_house');

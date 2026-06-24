@@ -3,8 +3,8 @@
 import { useState, useCallback } from 'react';
 import { useGameStore } from '@/lib/buddy/store';
 import { runAdventure, applyAdventureResult } from '@/lib/locations/adventure';
-import { LOCATIONS } from '@/data/locations';
-import { LocationDefinition, AdventureResult } from '@/lib/generation/types';
+import { EXPLORE_LOCATIONS } from '@/data/locations';
+import { InventoryItem, LocationDefinition, AdventureResult } from '@/lib/generation/types';
 import { saveGame } from '@/lib/storage/indexeddb';
 import { checkEvolution, getStageName } from '@/lib/progression/lifecycle';
 import { checkAchievements } from '@/data/achievements';
@@ -14,7 +14,12 @@ interface AdventureScreenProps {
 }
 
 export function AdventureScreen({ onBack }: AdventureScreenProps) {
-  const { buddy, inventory, setBuddy, setInventory, setCurrentAdventureResult, guestId } = useGameStore();
+  const buddy = useGameStore(s => s.buddy);
+  const inventory = useGameStore(s => s.inventory);
+  const setBuddy = useGameStore(s => s.setBuddy);
+  const setInventory = useGameStore(s => s.setInventory);
+  const setCurrentAdventureResult = useGameStore(s => s.setCurrentAdventureResult);
+  const guestId = useGameStore(s => s.guestId);
   const [selectedLocation, setSelectedLocation] = useState<LocationDefinition | null>(null);
   const [result, setResult] = useState<AdventureResult | null>(null);
   const [loading, setLoading] = useState(false);
@@ -22,8 +27,8 @@ export function AdventureScreen({ onBack }: AdventureScreenProps) {
 
   const isGuest = guestId.startsWith('guest-');
   const availableLocations = isGuest
-    ? LOCATIONS.filter(l => !l.requiresAccount)
-    : LOCATIONS;
+    ? EXPLORE_LOCATIONS.filter(l => !l.requiresAccount)
+    : EXPLORE_LOCATIONS;
 
   const handleAdventure = useCallback(async (location: LocationDefinition) => {
     if (!buddy) return;
@@ -44,40 +49,64 @@ export function AdventureScreen({ onBack }: AdventureScreenProps) {
 
     const { buddy: updatedBuddy, inventory: updatedInv } = applyAdventureResult(buddy, inventory, adventureResult);
 
-    const newProgression = updatedBuddy.progression
-      ? { ...updatedBuddy.progression, totalAdventures: updatedBuddy.progression.totalAdventures + 1 }
-      : undefined;
-    if (newProgression) updatedBuddy.progression = newProgression;
+    let resultMessage = adventureResult.message;
+    let finalBuddy = updatedBuddy;
 
-    const evolvedStage = checkEvolution(updatedBuddy);
-    if (evolvedStage && updatedBuddy.progression) {
-      updatedBuddy.progression = { ...updatedBuddy.progression, lifecycle: evolvedStage };
-      adventureResult.message += ` ${getStageName(evolvedStage)} stage unlocked!`;
+    if (finalBuddy.progression) {
+      finalBuddy = {
+        ...finalBuddy,
+        progression: {
+          ...finalBuddy.progression,
+          totalAdventures: finalBuddy.progression.totalAdventures + 1,
+        },
+      };
     }
 
-    const unlocked = updatedBuddy.progression?.achievements || [];
-    const totalAdv = updatedBuddy.progression?.totalAdventures || 0;
-    const newAchievements = checkAchievements(updatedBuddy, updatedInv, totalAdv, unlocked);
+    const evolvedStage = checkEvolution(finalBuddy);
+    if (evolvedStage && finalBuddy.progression) {
+      finalBuddy = {
+        ...finalBuddy,
+        progression: { ...finalBuddy.progression, lifecycle: evolvedStage },
+      };
+      resultMessage += ` ${getStageName(evolvedStage)} stage unlocked!`;
+    }
+
+    const unlocked = finalBuddy.progression?.achievements || [];
+    const totalAdv = finalBuddy.progression?.totalAdventures || 0;
+    const newAchievements = checkAchievements(finalBuddy, updatedInv, totalAdv, unlocked);
+    let finalInv = updatedInv;
     if (newAchievements.length > 0) {
       const ids = newAchievements.map(a => a.id);
-      if (updatedBuddy.progression) {
-        updatedBuddy.progression = { ...updatedBuddy.progression, achievements: [...unlocked, ...ids] };
-      }
+      let newItems: InventoryItem[] = [...finalInv.items];
       let coinReward = 0;
       for (const a of newAchievements) {
         coinReward += a.rewardCoins || 0;
         if (a.rewardItemId) {
-          updatedInv.items.push({ id: a.rewardItemId, quantity: 1 });
+          const existing = newItems.find(i => i.id === a.rewardItemId);
+          if (existing) {
+            existing.quantity += 1;
+          } else {
+            newItems.push({ id: a.rewardItemId, quantity: 1 });
+          }
         }
       }
-      updatedInv.coins += coinReward;
-      adventureResult.message += ` Achievement: ${newAchievements.map(a => a.name).join(', ')}!`;
+      finalInv = { coins: finalInv.coins + coinReward, items: newItems };
+      resultMessage += ` Achievement: ${newAchievements.map(a => a.name).join(', ')}!`;
+
+      if (finalBuddy.progression) {
+        finalBuddy = {
+          ...finalBuddy,
+          progression: { ...finalBuddy.progression, achievements: [...unlocked, ...ids] },
+        };
+      }
     }
 
-    setBuddy(updatedBuddy);
-    setInventory(updatedInv);
-    setResult(adventureResult);
-    setCurrentAdventureResult(adventureResult);
+    const finalResult: AdventureResult = { ...adventureResult, message: resultMessage };
+
+    setBuddy(finalBuddy);
+    setInventory(finalInv);
+    setResult(finalResult);
+    setCurrentAdventureResult(finalResult);
     setLoading(false);
 
     try {

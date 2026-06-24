@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { BuddyState } from '@/lib/generation/types';
 import { useGameStore } from '@/lib/buddy/store';
 import { applyAction, applyOfflineDecay, CareActionType } from '@/lib/actions/care';
@@ -36,19 +36,18 @@ export function MainDevice({ buddy: initialBuddy, initialTab = 'main' }: MainDev
   const [achievementMessage, setAchievementMessage] = useState('');
   const [achievementKey, setAchievementKey] = useState(0);
   const updateBuddy = useGameStore((s) => s.updateBuddy);
-  const buddyRef = useRef(initialBuddy);
 
   useEffect(() => {
-    const buddy = buddyRef.current;
-    const elapsed = Date.now() - buddy.lastInteraction;
+    const elapsed = Date.now() - initialBuddy.lastInteraction;
     if (elapsed > 60_000) {
-      const decayed = applyOfflineDecay(buddy, elapsed);
+      const decayed = applyOfflineDecay(initialBuddy, elapsed);
       setCurrentBuddy(decayed);
-      updateBuddy({ needs: decayed.needs, mood: decayed.mood, health: decayed.health });
+      updateBuddy(decayed);
       setMessage('Your buddy missed you!');
       setMessageKey((k) => k + 1);
     }
-  }, [updateBuddy]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleAction = useCallback(
     async (action: CareActionType) => {

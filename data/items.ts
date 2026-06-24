@@ -5,7 +5,7 @@ export const ITEMS: ItemDefinition[] = [
   { id: 'bread', name: 'Bread', category: 'food', rarity: 'common', description: 'A warm loaf of bread.', icon: '🍞', sellValue: 2, flavorText: 'Simple and filling.' },
   { id: 'fish', name: 'Fish', category: 'food', rarity: 'common', description: 'A fresh-caught fish.', icon: '🐟', sellValue: 3, flavorText: 'Omega-3 for a healthy buddy!' },
   { id: 'berries', name: 'Berry Bowl', category: 'food', rarity: 'common', description: 'Mixed wild berries.', icon: '🫐', sellValue: 3, flavorText: 'Sweet and tangy.' },
-  { id: 'cake', name: ' celebration Cake', category: 'food', rarity: 'rare', description: 'A fancy cake with frosting.', icon: '🎂', sellValue: 15, flavorText: 'For special occasions!' },
+  { id: 'cake', name: 'Celebration Cake', category: 'food', rarity: 'rare', description: 'A fancy cake with frosting.', icon: '🎂', sellValue: 15, flavorText: 'For special occasions!' },
   { id: 'honey', name: 'Honey Pot', category: 'food', rarity: 'uncommon', description: 'Sweet golden honey.', icon: '🍯', sellValue: 8, flavorText: 'Buddies love this!' },
   { id: 'bandage', name: 'Bandage', category: 'medicine', rarity: 'common', description: 'A clean bandage wrap.', icon: '🩹', sellValue: 5, flavorText: 'Heals minor ouchies.' },
   { id: 'potion', name: 'Health Potion', category: 'medicine', rarity: 'uncommon', description: 'A glowing green potion.', icon: '🧪', sellValue: 20, flavorText: 'Restores vitality.' },

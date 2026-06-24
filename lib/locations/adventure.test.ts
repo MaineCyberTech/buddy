@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { runAdventure, applyAdventureResult } from '@/lib/locations/adventure';
 import { createInitialBuddyState } from '@/lib/generation/engine';
-import { LOCATIONS } from '@/data/locations';
+import { LOCATIONS, EXPLORE_LOCATIONS } from '@/data/locations';
 import { LOOT_TABLE_MAP } from '@/data/loot-tables';
 import { BuddyState, InventoryState } from '@/lib/generation/types';
 
@@ -56,6 +56,11 @@ describe('Adventure System', () => {
     it('main house has zero energy cost', () => {
       const house = LOCATIONS.find(l => l.id === 'main_house');
       expect(house?.energyCost).toBe(0);
+    });
+
+    it('EXPLORE_LOCATIONS excludes main_house', () => {
+      expect(EXPLORE_LOCATIONS.find(l => l.id === 'main_house')).toBeUndefined();
+      expect(EXPLORE_LOCATIONS.length).toBe(9);
     });
   });
 

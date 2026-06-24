@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { SeededRNG, createRNG } from '@/lib/generation/rng';
+import { SeededRNG } from '@/lib/generation/rng';
 import { hashString, hashCombine, generateSeed } from '@/lib/generation/hash';
 import { generateBuddy, createInitialBuddyState } from '@/lib/generation/engine';
 import { generateStats } from '@/lib/stats/engine';

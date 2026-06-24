@@ -76,12 +76,15 @@ export async function exportSave(): Promise<string> {
   const save = await loadGame();
   if (!save) throw new Error('No save to export');
   const json = JSON.stringify(save);
-  return btoa(json);
+  const bytes = new TextEncoder().encode(json);
+  return btoa(Array.from(new Uint8Array(bytes), b => String.fromCharCode(b)).join(''));
 }
 
 export async function importSave(encoded: string): Promise<boolean> {
   try {
-    const json = atob(encoded);
+    const binaryString = atob(encoded);
+    const bytes = Uint8Array.from(binaryString, c => c.charCodeAt(0));
+    const json = new TextDecoder().decode(bytes);
     const save = JSON.parse(json) as GameSave;
     if (!save.version || !save.guestId) {
       throw new Error('Invalid save format');

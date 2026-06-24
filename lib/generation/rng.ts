@@ -24,6 +24,7 @@ export class SeededRNG {
 
   weightedPick<T>(items: T[], weights: number[]): T {
     const total = weights.reduce((sum, w) => sum + w, 0);
+    if (total <= 0) return items[0];
     let random = this.next() * total;
     for (let i = 0; i < items.length; i++) {
       random -= weights[i];
@@ -44,19 +45,4 @@ export class SeededRNG {
   bool(probability: number): boolean {
     return this.next() < probability;
   }
-}
-
-export function createRNG(seed: string | number): SeededRNG {
-  const numericSeed = typeof seed === 'string' ? hashString(seed) : seed;
-  return new SeededRNG(numericSeed);
-}
-
-function hashString(str: string): number {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
-  }
-  return Math.abs(hash);
 }
