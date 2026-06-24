@@ -11,7 +11,7 @@ export async function migrateGuestToAccount(
 ): Promise<{ user: AuthUser; migratedSave: GameSave | null }> {
   const user = await LocalAuthService.migrateFromGuest(guestId, email, username);
 
-  const localSave = await loadGame();
+  const localSave = await loadGame(1);
 
   if (localSave) {
     const migratedSave: GameSave = {

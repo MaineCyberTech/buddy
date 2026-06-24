@@ -22,7 +22,7 @@ export function LcdDisplay({ buddy, animate = true, className = '' }: LcdDisplay
       aria-label={`${buddy.identity.nickname} the ${buddy.identity.speciesName}`}
     >
       <div className="scanlines absolute inset-0 pointer-events-none" />
-      <div className="relative z-10 flex flex-col items-center">
+      <div className={`relative z-10 flex flex-col items-center ${buddy.identity.isShiny ? 'shiny-sparkle' : ''}`}>
         <pre
           className={`font-lcd text-lg leading-tight whitespace-pre text-center lcd-text ${animate ? 'animate-fade-in' : ''}`}
           style={{ textShadow: '0 0 4px rgba(0,255,136,0.3)' }}
@@ -30,7 +30,7 @@ export function LcdDisplay({ buddy, animate = true, className = '' }: LcdDisplay
           {displayLines.join('\n')}
         </pre>
         <div className="mt-2 text-center">
-          <p className="text-xs lcd-text-accent opacity-70">
+          <p className={`text-xs ${buddy.identity.isShiny ? 'rarity-shiny' : 'lcd-text-accent'} opacity-70`}>
             {buddy.identity.rarity.toUpperCase()}
             {buddy.identity.isShiny && ' ✦ SHINY ✦'}
           </p>

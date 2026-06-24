@@ -1,0 +1,38 @@
+{
+  "project": "buddy-virtual-pet",
+  "bundle": "buddy-v2-feature-release-candidate-bundle",
+  "version": "1.0.0",
+  "reportedQualityGate": {
+    "tests": "178 passing",
+    "typecheck": "passing",
+    "build": "passing",
+    "buildSize": "130 kB",
+    "lint": "0 warnings",
+    "p0": 0,
+    "p1": 0
+  },
+  "targetBranches": {
+    "development": "dev",
+    "releaseCandidate": "release/buddy-v2-rc1"
+  },
+  "recommendedTag": "v0.1.0-buddy-rc1",
+  "runbooks": [
+    "runbooks/01-dev-merge-and-push-runbook.md",
+    "runbooks/02-local-rc-browser-qa-runbook.md",
+    "runbooks/03-release-branch-and-tag-runbook.md",
+    "runbooks/04-deployment-rehearsal-runbook.md",
+    "runbooks/05-post-release-monitoring-runbook.md"
+  ],
+  "checklists": [
+    "checklists/rc-final-validation-checklist.md",
+    "checklists/browser-device-qa-checklist.md",
+    "checklists/pwa-offline-qa-checklist.md",
+    "checklists/security-economy-qa-checklist.md",
+    "checklists/save-migration-qa-checklist.md"
+  ],
+  "prompts": [
+    "prompts/01-release-candidate-hardening-agent-prompt.md",
+    "prompts/02-deployment-rehearsal-agent-prompt.md",
+    "prompts/03-post-release-monitoring-agent-prompt.md"
+  ]
+}

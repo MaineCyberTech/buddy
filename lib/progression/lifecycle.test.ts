@@ -113,4 +113,55 @@ describe('Lifecycle System', () => {
       expect(names).toEqual(['Egg', 'Baby', 'Child', 'Teen', 'Adult', 'Elder']);
     });
   });
+
+  describe('Memory Entries', () => {
+    it('initial progression has empty memories', () => {
+      const prog = createInitialProgression();
+      expect(prog.memories).toEqual([]);
+    });
+
+    it('hatch memory has correct structure', () => {
+      const hatchMemory = {
+        id: 'hatch-abc123',
+        type: 'hatch' as const,
+        title: 'A TestBuddy is born!',
+        description: 'Buddy hatched from a mysterious egg.',
+        timestamp: 1000,
+        icon: '🥚',
+      };
+      expect(hatchMemory.id).toBeTruthy();
+      expect(hatchMemory.type).toBe('hatch');
+      expect(hatchMemory.title).toContain('TestBuddy');
+      expect(hatchMemory.timestamp).toBeGreaterThan(0);
+    });
+
+    it('memories can be prepended to progression', () => {
+      const prog = createInitialProgression();
+      const memory = {
+        id: 'hatch-1',
+        type: 'hatch' as const,
+        title: 'First hatch',
+        description: 'Born!',
+        timestamp: Date.now(),
+        icon: '🥚',
+      };
+      const updated = { ...prog, memories: [memory, ...prog.memories] };
+      expect(updated.memories).toHaveLength(1);
+      expect(updated.memories[0].title).toBe('First hatch');
+    });
+
+    it('supports multiple memory types', () => {
+      const types = ['hatch', 'evolution', 'adventure', 'milestone', 'achievement'] as const;
+      const memories = types.map((type, i) => ({
+        id: `mem-${i}`,
+        type,
+        title: `${type} event`,
+        description: 'A memory.',
+        timestamp: Date.now() + i,
+        icon: '📝',
+      }));
+      expect(memories).toHaveLength(5);
+      expect(memories.map(m => m.type)).toEqual(types);
+    });
+  });
 });

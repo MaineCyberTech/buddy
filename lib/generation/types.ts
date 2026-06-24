@@ -110,6 +110,23 @@ export interface GameSave {
   updatedAt: number;
   inventory?: InventoryState;
   placedDecor?: DecorPlacement[];
+  speciesBook?: import('@/lib/collections').SpeciesEntry[];
+  loreJournal?: import('@/lib/collections').LoreEntry[];
+  photoAlbum?: import('@/lib/collections').PhotoEntry[];
+  minigameHighScores?: Record<string, number>;
+  saveSlot?: number;
+}
+
+export interface SaveSlotSummary {
+  slot: number;
+  buddy: BuddyState | null;
+  createdAt: number;
+  updatedAt: number;
+  playTime: number;
+  buddyName: string;
+  buddySpecies: string;
+  buddyRarity: string;
+  buddyShiny: boolean;
 }
 
 export const STAT_NAMES: StatName[] = ['courage', 'curiosity', 'playfulness', 'discipline', 'empathy'];

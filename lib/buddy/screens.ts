@@ -1,1 +1,2 @@
 export type GameScreen = 'boot' | 'hatch' | 'main' | 'profile' | 'stats' | 'home' | 'settings';
+export type DeviceTab = 'main' | 'profile' | 'stats' | 'adventure' | 'inventory' | 'home' | 'settings' | 'memories' | 'minigames' | 'species' | 'lore' | 'photos' | 'trading' | 'leaderboards' | 'events' | 'breeding' | 'market';

@@ -119,6 +119,10 @@ export function AdventureScreen({ onBack }: AdventureScreenProps) {
         createdAt: finalBuddy.identity.generatedAt,
         updatedAt: Date.now(),
         placedDecor: storeState.placedDecor,
+        speciesBook: storeState.speciesBook,
+        loreJournal: storeState.loreJournal,
+        photoAlbum: storeState.photoAlbum,
+        minigameHighScores: storeState.minigameHighScores,
       });
     } catch (err) {
       console.error('Save after adventure failed:', err);

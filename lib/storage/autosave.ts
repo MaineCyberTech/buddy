@@ -1,4 +1,5 @@
 import { BuddyState, InventoryState, DecorPlacement } from '@/lib/generation/types';
+import { SpeciesEntry, LoreEntry, PhotoEntry } from '@/lib/collections';
 import { saveGame } from '@/lib/storage/indexeddb';
 
 let autosaveTimer: ReturnType<typeof setInterval> | null = null;
@@ -8,6 +9,10 @@ export function startAutosave(
   getInventory: () => InventoryState,
   getGuestId: () => string,
   getPlacedDecor?: () => DecorPlacement[],
+  getSpeciesBook?: () => SpeciesEntry[],
+  getLoreJournal?: () => LoreEntry[],
+  getPhotoAlbum?: () => PhotoEntry[],
+  getMinigameHighScores?: () => Record<string, number>,
   intervalMs: number = 10000
 ): void {
   stopAutosave();
@@ -25,6 +30,10 @@ export function startAutosave(
         updatedAt: Date.now(),
         inventory: getInventory(),
         placedDecor: getPlacedDecor ? getPlacedDecor() : undefined,
+        speciesBook: getSpeciesBook ? getSpeciesBook() : undefined,
+        loreJournal: getLoreJournal ? getLoreJournal() : undefined,
+        photoAlbum: getPhotoAlbum ? getPhotoAlbum() : undefined,
+        minigameHighScores: getMinigameHighScores ? getMinigameHighScores() : undefined,
       });
     } catch (error) {
       console.error('Autosave failed:', error);

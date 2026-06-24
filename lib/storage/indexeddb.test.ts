@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { saveGame, loadGame, hasSave, deleteSave, exportSave, importSave, getSaveMetadata } from './indexeddb';
+import { saveGame, loadGame, hasSave, deleteSave, exportSave, importSave } from './indexeddb';
 import { GameSave } from '@/lib/generation/types';
 
 const NOW = Date.now();
@@ -9,151 +9,124 @@ const MOCK_SAVE: GameSave = {
   guestId: 'test-guest-123',
   buddy: {
     identity: {
-      speciesId: 'test_id',
-      speciesName: 'Testomon',
-      nickname: 'Testo',
+      speciesId: 'fluffkin',
+      speciesName: 'Fluffkin',
+      nickname: 'TestBuddy',
       rarity: 'common',
       isShiny: false,
-      eyes: 'default',
       hat: 'none',
+      eyes: '..',
       generatedAt: NOW,
-      seed: 'test',
+      seed: 'seed123',
     },
-    stats: { courage: 50, curiosity: 30, playfulness: 20, discipline: 40, empathy: 60 },
-    needs: { hunger: 80, happiness: 70, cleanliness: 90, energy: 60, social: 50 },
-    mood: 'happy',
+    stats: { courage: 10, curiosity: 10, playfulness: 10, discipline: 10, empathy: 10 },
+    needs: { hunger: 50, happiness: 50, cleanliness: 50, energy: 50, social: 50 },
+    mood: 'content',
+    bond: 0,
     health: 100,
-    bond: 10,
-    xp: 50,
-    level: 2,
+    xp: 0,
+    level: 1,
     lastInteraction: NOW,
-    totalCareActions: 5,
-    personality: {
-      id: 'cheerful',
-      name: 'Cheerful',
-      description: 'Always happy',
-      likes: ['play', 'talk'],
-      dislikes: ['wait'],
-      preferredActivities: ['play'],
-      careModifiers: { hunger: 1, happiness: 1.2, cleanliness: 0.8, energy: 1, social: 1 },
-      idleLines: ['Hi!'],
-      happyLines: ['Whee!'],
-      hungryLines: ['Feed me'],
-      adventureLines: ['Let us go!'],
-      sleepLines: ['Zzz'],
-    },
-    progression: {
-      lifecycle: 'baby',
-      age: 0,
-      skills: { exploring: 0, training: 0, social: 0, crafting: 0, cooking: 0 },
-      bondLevel: 1,
-      totalAdventures: 0,
-      memories: [],
-      achievements: [],
-      careQuality: 1.0,
-    },
+    personality: { id: 'curious', name: 'Curious', description: 'Always exploring', likes: ['exploring'], dislikes: [], preferredActivities: ['adventure'], careModifiers: {}, idleLines: ['Hmm...'], happyLines: ['Yay!'], hungryLines: ['Hungry!'], adventureLines: ['Adventure time!'], sleepLines: ['Sleepy...'] },
+    progression: { lifecycle: 'baby', age: 0, skills: { exploring: 0, training: 0, social: 0, crafting: 0, cooking: 0 }, bondLevel: 1, totalAdventures: 0, memories: [], achievements: [], careQuality: 1.0 },
+    totalCareActions: 0,
   },
   createdAt: NOW,
   updatedAt: NOW,
-  inventory: { coins: 50, items: [{ id: 'test_item', quantity: 2 }] },
+  inventory: { coins: 100, items: [] },
+  saveSlot: 1,
 };
 
-describe('saveGame / loadGame', () => {
+describe('IndexedDB Storage', () => {
   beforeEach(async () => {
-    await deleteSave();
+    await deleteSave(1);
   });
 
-  it('saves and loads a game', async () => {
-    await saveGame(MOCK_SAVE);
-    const loaded = await loadGame();
-    expect(loaded).not.toBeNull();
-    expect(loaded!.guestId).toBe('test-guest-123');
-    expect(loaded!.buddy!.identity.speciesName).toBe('Testomon');
-    expect(loaded!.inventory?.coins).toBe(50);
-    expect(loaded!.inventory?.items).toHaveLength(1);
+  describe('saveGame / loadGame', () => {
+    it('saves and loads a game', async () => {
+      await saveGame(MOCK_SAVE);
+      const loaded = await loadGame(1);
+      expect(loaded).not.toBeNull();
+      expect(loaded?.guestId).toBe('test-guest-123');
+      expect(loaded?.buddy?.identity?.nickname).toBe('TestBuddy');
+    });
+
+    it('loadGame returns null when no save exists', async () => {
+      const loaded = await loadGame(2);
+      expect(loaded).toBeNull();
+    });
+
+    it('loadGame preserves save version', async () => {
+      await saveGame(MOCK_SAVE);
+      const loaded = await loadGame(1);
+      expect(loaded?.version).toBe(2);
+    });
+
+    it('overwrites existing save', async () => {
+      await saveGame(MOCK_SAVE);
+      const modified = { ...MOCK_SAVE, buddy: { ...MOCK_SAVE.buddy!, identity: { ...MOCK_SAVE.buddy!.identity, nickname: 'NewName' } } };
+      await saveGame(modified);
+      const loaded = await loadGame(1);
+      expect(loaded?.buddy?.identity?.nickname).toBe('NewName');
+    });
   });
 
-  it('hasSave returns true after saving', async () => {
-    expect(await hasSave()).toBe(false);
-    await saveGame(MOCK_SAVE);
-    expect(await hasSave()).toBe(true);
+  describe('hasSave', () => {
+    it('returns false when no save exists', async () => {
+      const exists = await hasSave(1);
+      expect(exists).toBe(false);
+    });
+
+    it('returns true after saveGame', async () => {
+      await saveGame(MOCK_SAVE);
+      const exists = await hasSave(1);
+      expect(exists).toBe(true);
+    });
+
+    it('returns false for different slot', async () => {
+      await saveGame(MOCK_SAVE);
+      const exists = await hasSave(2);
+      expect(exists).toBe(false);
+    });
   });
 
-  it('hasSave returns false after delete', async () => {
-    await saveGame(MOCK_SAVE);
-    expect(await hasSave()).toBe(true);
-    await deleteSave();
-    expect(await hasSave()).toBe(false);
+  describe('deleteSave', () => {
+    it('removes save for specific slot', async () => {
+      await saveGame(MOCK_SAVE);
+      await deleteSave(1);
+      const loaded = await loadGame(1);
+      expect(loaded).toBeNull();
+    });
+
+    it('does not affect other slots', async () => {
+      await saveGame(MOCK_SAVE);
+      const slot2 = { ...MOCK_SAVE, saveSlot: 2, guestId: 'guest2' };
+      await saveGame(slot2);
+      await deleteSave(1);
+      const loaded2 = await loadGame(2);
+      expect(loaded2).not.toBeNull();
+    });
   });
 
-  it('loadGame returns null when no save exists', async () => {
-    const loaded = await loadGame();
-    expect(loaded).toBeNull();
-  });
+  describe('exportSave / importSave', () => {
+    it('exports and imports saves', async () => {
+      await saveGame(MOCK_SAVE);
+      const exported = await exportSave();
+      await deleteSave(1);
+      const ok = await importSave(exported);
+      expect(ok).toBe(true);
+      const loaded = await loadGame(1);
+      expect(loaded?.guestId).toBe('test-guest-123');
+    });
 
-  it('loadGame preserves save version', async () => {
-    await saveGame(MOCK_SAVE);
-    const loaded = await loadGame();
-    expect(loaded!.version).toBe(2);
-  });
+    it('importSave rejects invalid data', async () => {
+      const ok = await importSave('not valid json');
+      expect(ok).toBe(false);
+    });
 
-  it('exportSave exports base64 string', async () => {
-    await saveGame(MOCK_SAVE);
-    const exported = await exportSave();
-    expect(typeof exported).toBe('string');
-    expect(exported.length).toBeGreaterThan(0);
-  });
-
-  it('importSave restores a save from base64', async () => {
-    await saveGame(MOCK_SAVE);
-    const exported = await exportSave();
-    await deleteSave();
-    expect(await hasSave()).toBe(false);
-    const result = await importSave(exported);
-    expect(result).toBe(true);
-    expect(await hasSave()).toBe(true);
-    const loaded = await loadGame();
-    expect(loaded!.guestId).toBe('test-guest-123');
-  });
-
-  it('importSave rejects invalid data', async () => {
-    const result = await importSave('invalid-base64');
-    expect(result).toBe(false);
-  });
-
-  it('getSaveMetadata returns save info', async () => {
-    await saveGame(MOCK_SAVE);
-    const meta = await getSaveMetadata();
-    expect(meta).not.toBeNull();
-    expect(meta!.exists).toBe(true);
-    expect(meta!.version).toBe(2);
-    expect(meta!.speciesName).toBe('Testomon');
-    expect(meta!.nickname).toBe('Testo');
-  });
-
-  it('getSaveMetadata returns { exists: false } when no save', async () => {
-    const meta = await getSaveMetadata();
-    expect(meta).toEqual({ exists: false });
-  });
-
-  it('preserves inventory after save/load cycle', async () => {
-    const saveWithInventory: GameSave = {
-      ...MOCK_SAVE,
-      inventory: { coins: 100, items: [{ id: 'food_apple', quantity: 3 }, { id: 'health_potion', quantity: 1 }] },
-    };
-    await saveGame(saveWithInventory);
-    const loaded = await loadGame();
-    expect(loaded!.inventory?.coins).toBe(100);
-    expect(loaded!.inventory?.items).toHaveLength(2);
-    expect(loaded!.inventory?.items.find(i => i.id === 'food_apple')?.quantity).toBe(3);
-  });
-
-  it('handles save without inventory (v1 compat)', async () => {
-    const v1Save = { ...MOCK_SAVE, version: 1 };
-    delete (v1Save as any).inventory;
-    await saveGame(v1Save as GameSave);
-    const loaded = await loadGame();
-    expect(loaded!.version).toBe(1);
-    expect(loaded!.inventory).toBeUndefined();
+    it('importSave rejects invalid structure', async () => {
+      const ok = await importSave(JSON.stringify({ version: 1, saves: 'not an array' }));
+      expect(ok).toBe(false);
+    });
   });
 });

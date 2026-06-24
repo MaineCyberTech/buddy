@@ -28,19 +28,33 @@ export function HatchFlow() {
 
   const handleConfirm = useCallback(async () => {
     if (!newBuddy) return;
+    const hatchMemory = {
+      id: 'hatch-' + Date.now().toString(36),
+      type: 'hatch' as const,
+      title: `A ${newBuddy.identity.speciesName} is born!`,
+      description: `${nickname || newBuddy.identity.speciesName} hatched from a mysterious egg.`,
+      timestamp: Date.now(),
+      icon: '🥚',
+    };
     const finalBuddy = {
       ...newBuddy,
       identity: { ...newBuddy.identity, nickname: nickname || newBuddy.identity.speciesName },
+      progression: { ...newBuddy.progression!, memories: [hatchMemory, ...newBuddy.progression!.memories] },
     };
     setBuddy(finalBuddy);
     try {
+      const store = useGameStore.getState();
       await saveGame({
         version: 2,
-        guestId: useGameStore.getState().guestId,
+        guestId: store.guestId,
         buddy: finalBuddy,
         createdAt: Date.now(),
         updatedAt: Date.now(),
-        inventory: useGameStore.getState().inventory,
+        inventory: store.inventory,
+        speciesBook: store.speciesBook,
+        loreJournal: store.loreJournal,
+        photoAlbum: store.photoAlbum,
+        minigameHighScores: store.minigameHighScores,
       });
     } catch (err) {
       console.error('Save after hatch failed:', err);
@@ -89,10 +103,13 @@ export function HatchFlow() {
 
   if (step === 'reveal' && newBuddy) {
     const species = newBuddy.identity;
+    const statEntries = Object.entries(newBuddy.stats) as [string, number][];
+    const peakStat = statEntries.reduce((a, b) => a[1] > b[1] ? a : b);
+    const dumpStat = statEntries.reduce((a, b) => a[1] < b[1] ? a : b);
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-6 lcd-screen" role="status" aria-live="polite">
         <div className="text-center max-w-md animate-fade-in">
-          <div className="mb-4">
+          <div className="mb-2">
             <span className={`text-lg font-bold rarity-${species.rarity}`}>
               {species.rarity.toUpperCase()}
             </span>
@@ -100,16 +117,23 @@ export function HatchFlow() {
               <span className="rarity-shiny ml-2">✦ SHINY ✦</span>
             )}
           </div>
-          <pre className="font-lcd text-xl lcd-text mb-4 leading-tight" aria-hidden="true">
+          <pre className="font-lcd text-xl lcd-text mb-4 leading-tight shiny-sparkle" aria-hidden="true">
             {['  ___', ' /...\\ ', '|_____|', '  ||||'].join('\n')}
           </pre>
-          <h2 className="text-2xl font-lcd lcd-text-accent mb-2">
+          <h2 className="text-2xl font-lcd lcd-text-accent mb-1">
             A {species.speciesName}!
           </h2>
-          <p className="sr-only">A {species.rarity} {species.speciesName}{species.isShiny ? ' Shiny variant' : ''} was hatched.</p>
+          <p className="text-sm lcd-text opacity-80 mb-3">
+            {newBuddy.personality.name} personality — &quot;{newBuddy.personality.description}&quot;
+          </p>
+          <div className="text-xs lcd-text opacity-60 space-y-0.5 mb-4">
+            <span>Peak: {peakStat[0]} ({peakStat[1]})</span>
+            <span className="mx-2">|</span>
+            <span>Dump: {dumpStat[0]} ({dumpStat[1]})</span>
+          </div>
           <button
             onClick={() => setStep('nickname')}
-            className="btn-device px-6 py-3 rounded-lg btn-primary focus-ring mt-4"
+            className="btn-device px-6 py-3 rounded-lg btn-primary focus-ring"
           >
             NAME YOUR BUDDY
           </button>

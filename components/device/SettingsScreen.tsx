@@ -130,6 +130,25 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
       </div>
 
       <div className="space-y-1.5">
+        <p className="text-[10px] lcd-text opacity-50 uppercase">Preferences</p>
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            defaultChecked={localStorage.getItem('buddy-silent-mode') === 'true'}
+            onChange={(e) => {
+              if (e.target.checked) {
+                localStorage.setItem('buddy-silent-mode', 'true');
+              } else {
+                localStorage.removeItem('buddy-silent-mode');
+              }
+            }}
+            className="accent-lcd-green"
+          />
+          <span className="text-xs lcd-text-accent">Silent mode (no popup messages)</span>
+        </label>
+      </div>
+
+      <div className="space-y-1.5">
         <p className="text-[10px] lcd-text opacity-50 uppercase">Data</p>
         <div className="flex gap-2">
           <button onClick={handleExport} className="btn-device px-3 py-2 text-xs rounded-md focus-ring">

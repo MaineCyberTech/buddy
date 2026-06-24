@@ -1,58 +1,90 @@
-var CACHE_NAME = 'buddy-cache-v1';
-var ASSETS_TO_CACHE = [
+const CACHE_VERSION = 'v2';
+const STATIC_CACHE = `buddy-static-${CACHE_VERSION}`;
+const DYNAMIC_CACHE = `buddy-dynamic-${CACHE_VERSION}`;
+const ASSET_CACHE = `buddy-assets-${CACHE_VERSION}`;
+
+const PRECACHE_URLS = [
   '/',
   '/manifest.json',
-  '/icon-192.svg',
-  '/icon-512.svg',
+  '/icons/icon-192.png',
+  '/icons/icon-512.png',
 ];
 
-self.addEventListener('install', function(event) {
+self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(function(cache) {
-      return cache.addAll(ASSETS_TO_CACHE);
-    })
+    caches.open(STATIC_CACHE).then((cache) => cache.addAll(PRECACHE_URLS))
   );
   self.skipWaiting();
 });
 
-self.addEventListener('activate', function(event) {
+self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then(function(cacheNames) {
-      return Promise.all(
-        cacheNames
-          .filter(function(name) { return name !== CACHE_NAME; })
-          .map(function(name) { return caches.delete(name); })
-      );
-    })
+    caches.keys().then((keys) =>
+      Promise.all(
+        keys
+          .filter((key) => key !== STATIC_CACHE && key !== DYNAMIC_CACHE && key !== ASSET_CACHE)
+          .map((key) => caches.delete(key))
+      )
+    )
   );
   self.clients.claim();
 });
 
-self.addEventListener('fetch', function(event) {
-  var request = event.request;
+self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  const url = new URL(request.url);
 
   if (request.method !== 'GET') return;
 
-  event.respondWith(
-    caches.match(request).then(function(cachedResponse) {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
+  if (url.origin === location.origin) {
+    if (url.pathname.startsWith('/_next/static/') || url.pathname.startsWith('/icons/') || url.pathname === '/manifest.json') {
+      event.respondWith(cacheFirst(request));
+    } else if (url.pathname === '/') {
+      event.respondWith(networkFirst(request));
+    } else {
+      event.respondWith(networkFirst(request));
+    }
+  } else {
+    event.respondWith(networkFirst(request));
+  }
+});
 
-      return fetch(request).then(function(response) {
-        if (response && response.status === 200 && response.type === 'basic') {
-          var responseClone = response.clone();
-          caches.open(CACHE_NAME).then(function(cache) {
-            cache.put(request, responseClone);
-          });
-        }
-        return response;
-      }).catch(function() {
-        if (request.mode === 'navigate') {
-          return caches.match('/');
-        }
-        return new Response('Offline', { status: 503 });
-      });
-    })
-  );
+async function cacheFirst(request) {
+  const cached = await caches.match(request);
+  if (cached) return cached;
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const cache = await caches.open(DYNAMIC_CACHE);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch {
+    return new Response('Offline', { status: 503 });
+  }
+}
+
+async function networkFirst(request) {
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const cache = await caches.open(DYNAMIC_CACHE);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch (error) {
+    const cached = await caches.match(request);
+    if (cached) return cached;
+    if (request.mode === 'navigate') {
+      const offlinePage = await caches.match('/');
+      if (offlinePage) return offlinePage;
+    }
+    return new Response('Offline', { status: 503 });
+  }
+}
+
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });

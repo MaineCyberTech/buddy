@@ -1,0 +1,38 @@
+# Bundle Folder Structure
+
+```txt
+buddy_v2_feature_release_candidate_bundle/
+  README.md
+  release/
+    buddy-v2-release-candidate-report.md
+    final-feature-inventory.md
+    release-notes-draft.md
+  runbooks/
+    01-dev-merge-and-push-runbook.md
+    02-local-rc-browser-qa-runbook.md
+    03-release-branch-and-tag-runbook.md
+    04-deployment-rehearsal-runbook.md
+    05-post-release-monitoring-runbook.md
+  checklists/
+    rc-final-validation-checklist.md
+    browser-device-qa-checklist.md
+    pwa-offline-qa-checklist.md
+    security-economy-qa-checklist.md
+    save-migration-qa-checklist.md
+  prompts/
+    01-release-candidate-hardening-agent-prompt.md
+    02-deployment-rehearsal-agent-prompt.md
+    03-post-release-monitoring-agent-prompt.md
+  templates/
+    rc-browser-qa-report-template.md
+    deployment-rehearsal-report-template.md
+    hotfix-report-template.md
+    release-pr-description.md
+  scripts/
+    rc-local-test.ps1
+    rc-local-test.sh
+    create-rc-branch.ps1
+    create-rc-branch.sh
+  runner/
+    release-candidate-manifest.json
+```
