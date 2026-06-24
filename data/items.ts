@@ -42,6 +42,12 @@ export const ITEMS: ItemDefinition[] = [
   { id: 'friendship_bracelet', name: 'Friendship Bracelet', category: 'trinket', rarity: 'uncommon', description: 'Woven with care.', icon: '📿', sellValue: 15, flavorText: 'Bond boost!' },
   { id: 'mysterious_egg', name: 'Mysterious Egg', category: 'quest', rarity: 'legendary', description: 'What could be inside?', icon: '🥚', sellValue: 0, flavorText: 'It vibrates gently.' },
   { id: 'treasure_map', name: 'Treasure Map', category: 'quest', rarity: 'rare', description: 'Marks an X on a special spot.', icon: '🗺️', sellValue: 0, flavorText: 'X marks the spot.' },
+  { id: 'ember_fruit', name: 'Ember Fruit', category: 'food', rarity: 'rare', description: 'A warm glowing fruit from volcanic soil.', icon: '🌶️', sellValue: 12, flavorText: 'Smoldering sweetness.' },
+  { id: 'star_dust', name: 'Star Dust', category: 'material', rarity: 'epic', description: 'Glimmering particles from a fallen star.', icon: '✨', sellValue: 45, flavorText: 'Wishes come true.' },
+  { id: 'moon_fruit', name: 'Moon Fruit', category: 'food', rarity: 'epic', description: 'A fruit that only blooms under moonlight.', icon: '🌙', sellValue: 30, flavorText: 'Tastes like dreams.' },
+  { id: 'thunder_feather', name: 'Thunder Feather', category: 'material', rarity: 'legendary', description: 'A feather crackling with storm energy.', icon: '⚡', sellValue: 80, flavorText: 'The storm sings within.' },
+  { id: 'rainbow_scale', name: 'Rainbow Scale', category: 'trinket', rarity: 'legendary', description: 'A scale that shimmers with all colors.', icon: '🌈', sellValue: 100, flavorText: 'Hope made tangible.' },
+  { id: 'bone_treat', name: 'Bone Treat', category: 'food', rarity: 'common', description: 'A crunchy bone-shaped snack.', icon: '🦴', sellValue: 3, flavorText: 'Good for teeth!' },
 ];
 
 export const ITEM_MAP = new Map(ITEMS.map(i => [i.id, i]));

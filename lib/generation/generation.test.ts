@@ -113,8 +113,8 @@ describe('Deterministic Generation', () => {
   });
 
   describe('Species data', () => {
-    it('has exactly 50 species', () => {
-      expect(SPECIES).toHaveLength(50);
+    it('has exactly 55 species', () => {
+      expect(SPECIES).toHaveLength(55);
     });
 
     it('each species has required fields', () => {

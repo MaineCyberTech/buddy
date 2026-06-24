@@ -122,6 +122,47 @@ export const ACHIEVEMENTS: Achievement[] = [
     condition: (_state, inv) => (inv?.items?.length ?? 0) >= 10,
     rewardCoins: 40,
   },
+  {
+    id: 'bond_5',
+    name: 'Best Friends',
+    description: 'Reach bond level 5.',
+    icon: '💕',
+    condition: (state) => state.bond >= 50,
+    rewardCoins: 50,
+  },
+  {
+    id: 'bond_10',
+    name: 'Soul Bond',
+    description: 'Reach bond level 10.',
+    icon: '💖',
+    condition: (state) => state.bond >= 100,
+    rewardCoins: 100,
+  },
+  {
+    id: 'shiny_collector',
+    name: 'Shiny Collector',
+    description: 'Hatch a shiny buddy.',
+    icon: '✨',
+    condition: (state) => state.identity.isShiny,
+    rewardCoins: 150,
+    rewardItemId: 'lucky_coin',
+  },
+  {
+    id: 'elder_wisdom',
+    name: 'Elder Wisdom',
+    description: 'Reach the Elder stage.',
+    icon: '👴',
+    condition: (state) => state.progression?.lifecycle === 'elder',
+    rewardCoins: 200,
+  },
+  {
+    id: 'minigame_master',
+    name: 'Mini-Game Master',
+    description: 'Complete all three mini-games.',
+    icon: '🎮',
+    condition: (_state, _inv, _adv) => false, // checked externally via high scores
+    rewardCoins: 75,
+  },
 ];
 
 export function createMemory(
