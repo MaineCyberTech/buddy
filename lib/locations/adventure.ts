@@ -1,6 +1,7 @@
 import { SeededRNG } from '@/lib/generation/rng';
 import {
   BuddyState,
+  BuddyStats,
   InventoryState,
   AdventureResult,
 } from '@/lib/generation/types';
@@ -108,6 +109,16 @@ export function runAdventure(
     ? `Adventure complete! ${encounterText}`
     : `The adventure was tough this time. ${encounterText}`;
 
+  const statChanges: Partial<BuddyStats> = {};
+  if (success) {
+    for (const key of Object.keys(location.statChecks) as (keyof typeof location.statChecks)[]) {
+      const req = location.statChecks[key];
+      if (req && req > 0) {
+        (statChanges as Record<string, number>)[key] = Math.round(Math.min(req * 0.2, 5));
+      }
+    }
+  }
+
   return {
     success,
     locationId,
@@ -116,7 +127,7 @@ export function runAdventure(
     itemsReceived,
     xpGained,
     bondChange,
-    statChanges: {},
+    statChanges,
     energyCost,
     encounterText,
   };
@@ -139,6 +150,14 @@ export function applyAdventureResult(
   newBuddy.xp += result.xpGained;
   newBuddy.bond = Math.min(100, newBuddy.bond + result.bondChange);
   newBuddy.lastInteraction = Date.now();
+  if (result.statChanges) {
+    for (const key of Object.keys(result.statChanges) as (keyof typeof newBuddy.stats)[]) {
+      const change = result.statChanges[key];
+      if (change) {
+        newBuddy.stats = { ...newBuddy.stats, [key]: Math.min(100, Math.max(0, (newBuddy.stats[key] || 0) + change)) };
+      }
+    }
+  }
 
   let newLevel = newBuddy.level;
   let remainingXp = newBuddy.xp;
@@ -148,19 +167,21 @@ export function applyAdventureResult(
   }
   newBuddy.level = newLevel;
 
-  const newItems = [...newInventory.items];
+  let mergedItems = [...newInventory.items];
   for (const item of result.itemsReceived) {
-    const existing = newItems.find(i => i.id === item.id);
+    const existing = mergedItems.find(i => i.id === item.id);
     if (existing) {
-      existing.quantity += item.quantity;
+      mergedItems = mergedItems.map(i =>
+        i.id === item.id ? { ...i, quantity: i.quantity + item.quantity } : i
+      );
     } else {
-      newItems.push({ ...item });
+      mergedItems.push({ ...item });
     }
   }
 
   return {
     buddy: newBuddy,
-    inventory: { coins: newInventory.coins + result.coinsEarned, items: newItems },
+    inventory: { coins: newInventory.coins + result.coinsEarned, items: mergedItems },
   };
 }
 

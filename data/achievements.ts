@@ -6,7 +6,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     name: 'New Life',
     description: 'Hatch your first Buddy.',
     icon: '🥚',
-    condition: () => true,
+    condition: (state) => state.totalCareActions > 0,
     rewardCoins: 10,
   },
   {

@@ -90,6 +90,8 @@ export function applyAction(buddy: BuddyState, action: CareActionType): { buddy:
     case 'train': {
       newNeeds.energy = Math.max(0, newNeeds.energy - 20);
       newNeeds.hunger = Math.max(0, newNeeds.hunger - 8);
+      const disciplineGain = Math.round(3 * mod);
+      newBuddy.stats = { ...buddy.stats, discipline: Math.min(100, buddy.stats.discipline + disciplineGain) };
       message = pickMessage(ACTION_MESSAGES.train);
       moodChange = -5;
       bondChange = 2;
@@ -99,8 +101,8 @@ export function applyAction(buddy: BuddyState, action: CareActionType): { buddy:
     case 'heal': {
       if (buddy.health >= 100) {
         return {
-          buddy,
-          result: { message: 'Already healthy!', moodChange: 0, bondChange: 0, xpGain: 0, healthChange: 0 },
+          buddy: { ...buddy, totalCareActions: buddy.totalCareActions + 1, lastInteraction: Date.now() },
+          result: { message: 'Already healthy!', moodChange: 0, bondChange: 0, xpGain: 1, healthChange: 0 },
         };
       }
       const healAmount = Math.round(30 * mod);
@@ -166,7 +168,7 @@ export function applyOfflineDecay(buddy: BuddyState, elapsedMs: number): BuddySt
   newNeeds.hunger = Math.max(0, newNeeds.hunger - Math.round(decayHours * decayRate));
   newNeeds.happiness = Math.max(0, newNeeds.happiness - Math.round(decayHours * 0.8));
   newNeeds.cleanliness = Math.max(0, newNeeds.cleanliness - Math.round(decayHours * 0.5));
-  newNeeds.energy = Math.min(100, newNeeds.energy + Math.round(Math.min(decayHours * 2, 30)));
+  newNeeds.energy = Math.max(0, newNeeds.energy - Math.round(Math.min(decayHours * 2, 30)));
   newNeeds.social = Math.max(0, newNeeds.social - Math.round(decayHours * 1.2));
 
   newBuddy.needs = newNeeds;

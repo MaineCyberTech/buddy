@@ -17,6 +17,9 @@ export default function HomePage() {
         const save = await loadGame();
         if (save?.buddy) {
           setBuddy(save.buddy);
+          if (save.guestId) {
+            useGameStore.getState().setGuestId(save.guestId);
+          }
           if (save.inventory) {
             useGameStore.getState().setInventory(save.inventory);
           }

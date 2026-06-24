@@ -200,10 +200,10 @@ describe('Offline Decay', () => {
     expect(decayed.health).toBeLessThanOrEqual(buddy.health);
   });
 
-  it('increases energy slightly during rest (offline)', () => {
-    const buddy = createTestBuddy({ needs: { ...createTestBuddy().needs, energy: 20 } });
+  it('decreases energy slightly during offline', () => {
+    const buddy = createTestBuddy({ needs: { ...createTestBuddy().needs, energy: 50 } });
     const elapsed = 2 * 60 * 60 * 1000;
     const decayed = applyOfflineDecay(buddy, elapsed);
-    expect(decayed.needs.energy).toBeGreaterThanOrEqual(buddy.needs.energy);
+    expect(decayed.needs.energy).toBeLessThan(buddy.needs.energy);
   });
 });

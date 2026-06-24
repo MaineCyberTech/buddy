@@ -110,13 +110,15 @@ export function AdventureScreen({ onBack }: AdventureScreenProps) {
     setLoading(false);
 
     try {
+      const storeState = useGameStore.getState();
       await saveGame({
         version: 2,
         guestId,
-        buddy: updatedBuddy,
-        inventory: updatedInv,
-        createdAt: updatedBuddy.identity.generatedAt,
+        buddy: finalBuddy,
+        inventory: finalInv,
+        createdAt: finalBuddy.identity.generatedAt,
         updatedAt: Date.now(),
+        placedDecor: storeState.placedDecor,
       });
     } catch (err) {
       console.error('Save after adventure failed:', err);

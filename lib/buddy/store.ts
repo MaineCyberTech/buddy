@@ -63,13 +63,12 @@ export const useGameStore = create<GameStore>((set) => ({
     })),
   addItem: (itemId, quantity) =>
     set((state) => {
-      const items = [...state.inventory.items];
-      const existing = items.find(i => i.id === itemId);
-      if (existing) {
-        existing.quantity += quantity;
-      } else {
-        items.push({ id: itemId, quantity });
-      }
+      const existing = state.inventory.items.find(i => i.id === itemId);
+      const items = existing
+        ? state.inventory.items.map(i =>
+            i.id === itemId ? { ...i, quantity: i.quantity + quantity } : i
+          )
+        : [...state.inventory.items, { id: itemId, quantity }];
       return { inventory: { ...state.inventory, items } };
     }),
   removeItem: (itemId, quantity) =>

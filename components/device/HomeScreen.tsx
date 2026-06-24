@@ -82,6 +82,10 @@ export function HomeScreen({ onBack }: HomeScreenProps) {
   if (view === 'selecting' && selectedSlot) {
     const slot = HOME_SLOTS.find(s => s.id === selectedSlot);
     const current = placementMap.get(selectedSlot);
+    const slotDecor = availableDecor.filter(entry => {
+      const def = ITEM_MAP.get(entry.id);
+      return def && def.placementSlot === selectedSlot;
+    });
 
     return (
       <div className="animate-fade-in space-y-3">
@@ -92,10 +96,10 @@ export function HomeScreen({ onBack }: HomeScreenProps) {
           </p>
         )}
         <div className="space-y-1 max-h-40 overflow-y-auto">
-          {availableDecor.length === 0 ? (
-            <p className="text-xs lcd-text opacity-50 italic">No decor items in inventory. Go on adventures to find some!</p>
+          {slotDecor.length === 0 ? (
+            <p className="text-xs lcd-text opacity-50 italic">No decor items for this slot. Go on adventures to find some!</p>
           ) : (
-            availableDecor.map((entry) => {
+            slotDecor.map((entry) => {
               const def = ITEM_MAP.get(entry.id);
               if (!def) return null;
               return (

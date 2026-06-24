@@ -18,7 +18,7 @@ const STAGE_XP_THRESHOLDS: Record<LifecycleStage, number> = {
 
 export function createInitialProgression(): ProgressionState {
   return {
-    lifecycle: 'baby',
+    lifecycle: 'egg',
     age: 0,
     skills: { exploring: 0, training: 0, social: 0, crafting: 0, cooking: 0 },
     bondLevel: 1,

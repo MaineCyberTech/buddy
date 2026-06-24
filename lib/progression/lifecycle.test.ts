@@ -12,9 +12,9 @@ import { LifecycleStage } from '@/lib/generation/types';
 
 describe('Lifecycle System', () => {
   describe('createInitialProgression', () => {
-    it('creates progression with baby stage', () => {
+    it('creates progression with egg stage', () => {
       const prog = createInitialProgression();
-      expect(prog.lifecycle).toBe('baby');
+      expect(prog.lifecycle).toBe('egg');
       expect(prog.age).toBe(0);
       expect(prog.totalAdventures).toBe(0);
       expect(prog.achievements).toEqual([]);
