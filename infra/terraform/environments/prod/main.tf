@@ -14,7 +14,7 @@ module "digitalocean" {
   source       = "../../modules/digitalocean"
   do_token     = var.do_token
   project_name = "Buddy"
-  environment  = "prod"
+  environment  = "production"
   droplet_name = "buddy-prod-droplet"
   droplet_size = "s-4vcpu-4gb"
   region       = "nyc3"
@@ -25,7 +25,7 @@ module "cloudflare" {
   source               = "../../modules/cloudflare"
   cloudflare_api_token = var.cloudflare_api_token
   zone_id              = var.cloudflare_zone_id
-  environment          = "prod"
+  environment          = "production"
   app_domain           = "buddy.mainecybertech.com"
   api_domain           = "buddy-api.mainecybertech.com"
   app_ip               = module.digitalocean.reserved_ip
