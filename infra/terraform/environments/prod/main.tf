@@ -30,7 +30,6 @@ module "cloudflare" {
   api_domain           = "buddy-api.mainecybertech.com"
   app_ip               = module.digitalocean.reserved_ip
   proxied              = true
-  tunnel_enabled       = false
 }
 
 output "droplet_ip" {
