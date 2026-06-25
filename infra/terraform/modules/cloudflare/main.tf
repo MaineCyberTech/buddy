@@ -53,8 +53,9 @@ provider "cloudflare" {
 resource "cloudflare_dns_record" "app" {
   zone_id = var.zone_id
   name    = split(".", var.app_domain)[0]
-  value   = var.app_ip
+  content = var.app_ip
   type    = "A"
+  ttl     = 1
   proxied = var.proxied
   comment = "Buddy ${var.environment} app"
 }
@@ -63,8 +64,9 @@ resource "cloudflare_dns_record" "app" {
 resource "cloudflare_dns_record" "api" {
   zone_id = var.zone_id
   name    = split(".", var.api_domain)[0]
-  value   = var.app_ip
+  content = var.app_ip
   type    = "A"
+  ttl     = 1
   proxied = var.proxied
   comment = "Buddy ${var.environment} API"
 }
