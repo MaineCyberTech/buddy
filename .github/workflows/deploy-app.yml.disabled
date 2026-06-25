@@ -1,0 +1,44 @@
+name: Deploy App
+
+on:
+  workflow_run:
+    workflows: ["Deploy Infra"]
+    types: [completed]
+    branches: [develop, main]
+  workflow_dispatch:
+
+env:
+  DOCKER_HOST: ssh://root@${{ secrets.DROPLET_IP }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref_name == 'main' && 'production' || 'development' }}
+    if: ${{ github.event.workflow_run.conclusion != 'failure' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H ${{ secrets.DROPLET_IP }} >> ~/.ssh/known_hosts
+
+      - name: Copy Infra Files
+        run: |
+          ssh root@${{ secrets.DROPLET_IP }} "mkdir -p /opt/buddy/certs"
+          scp -r infra/docker/* root@${{ secrets.DROPLET_IP }}:/opt/buddy/
+
+      - name: Deploy Stack
+        run: |
+          ssh root@${{ secrets.DROPLET_IP }} "cd /opt/buddy && \
+            NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }} \
+            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }} \
+            docker compose -f docker-compose.${{ github.ref_name == 'main' && 'prod' || 'devremote' }}.yml pull && \
+            docker compose -f docker-compose.${{ github.ref_name == 'main' && 'prod' || 'devremote' }}.yml up -d --remove-orphans"
+
+      - name: Health Check
+        run: |
+          sleep 10
+          curl -fI https://${{ secrets.APP_DOMAIN }} || echo "Warning: App not responding yet"

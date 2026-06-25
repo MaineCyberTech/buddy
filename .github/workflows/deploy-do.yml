@@ -82,9 +82,15 @@ jobs:
       - name: Set up SSH key
         run: |
           mkdir -p ~/.ssh
+          if [ -z "${{ secrets.DO_SSH_PRIVATE_KEY }}" ]; then
+            echo "ERROR: DO_SSH_PRIVATE_KEY secret is not set"
+            exit 1
+          fi
           echo "${{ secrets.DO_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keygen -p -P "${{ secrets.DO_SSH_PASSPHRASE }}" -N "" -f ~/.ssh/id_rsa
+          if [ -n "${{ secrets.DO_SSH_PASSPHRASE }}" ]; then
+            ssh-keygen -p -P "${{ secrets.DO_SSH_PASSPHRASE }}" -N "" -f ~/.ssh/id_rsa
+          fi
 
       - name: Resolve droplet IP
         id: ip
