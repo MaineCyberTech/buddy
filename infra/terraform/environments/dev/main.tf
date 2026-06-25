@@ -16,7 +16,7 @@ module "digitalocean" {
   do_token     = var.do_token
   project_name = "Buddy"
   environment  = "dev"
-  droplet_name = "buddy-dev-droplet"
+  droplet_name = "mct-portal-dev"
   droplet_size = "s-1vcpu-512mb-10gb"
   region       = "nyc3"
   tags         = ["buddy", "dev"]
