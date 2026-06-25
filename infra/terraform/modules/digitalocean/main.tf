@@ -32,10 +32,10 @@ variable "region" {
   default     = "nyc3"
 }
 
-variable "ssh_key_ids" {
-  description = "SSH key IDs to inject"
-  type        = list(string)
-  default     = []
+variable "ssh_key_fingerprint" {
+  description = "SSH key fingerprint (md5) to inject"
+  type        = string
+  default     = ""
 }
 
 variable "reserved_ip" {
@@ -127,7 +127,7 @@ resource "digitalocean_droplet" "app" {
   name       = var.droplet_name
   region     = var.region
   size       = var.droplet_size
-  ssh_keys   = var.ssh_key_ids
+  ssh_keys   = var.ssh_key_fingerprint != "" ? [var.ssh_key_fingerprint] : []
   tags       = concat(var.tags, ["${var.environment}"])
   monitoring = true
 

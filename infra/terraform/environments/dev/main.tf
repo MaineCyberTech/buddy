@@ -11,14 +11,15 @@ terraform {
 }
 
 module "digitalocean" {
-  source       = "../../modules/digitalocean"
-  do_token     = var.do_token
-  project_name = "Buddy"
-  environment  = "development"
-  droplet_name = "buddy-dev-droplet"
-  droplet_size = "s-1vcpu-512mb-10gb"
-  region       = "nyc3"
-  tags         = ["buddy", "dev"]
+  source               = "../../modules/digitalocean"
+  do_token             = var.do_token
+  project_name         = "Buddy"
+  environment          = "development"
+  droplet_name         = "buddy-dev-droplet"
+  droplet_size         = "s-1vcpu-512mb-10gb"
+  region               = "nyc3"
+  tags                 = ["buddy", "dev"]
+  ssh_key_fingerprint  = var.ssh_key_fingerprint
 }
 
 module "cloudflare" {

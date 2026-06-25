@@ -24,7 +24,7 @@ jobs:
       TF_VAR_do_token: ${{ secrets.DO_TOKEN }}
       TF_VAR_cloudflare_api_token: ${{ secrets.CF_API_TOKEN }}
       TF_VAR_cloudflare_zone_id: ${{ secrets.CF_ZONE_ID }}
-      TF_VAR_ssh_key_ids: ${{ secrets.DO_SSH_KEY_IDS }}
+      TF_VAR_ssh_key_fingerprint: ${{ secrets.DO_SSH_KEY_FINGERPRINT }}
 
     steps:
       - name: Checkout
@@ -63,14 +63,14 @@ jobs:
           TF_VAR_do_token: ${{ secrets.DO_TOKEN }}
           TF_VAR_cloudflare_api_token: ${{ secrets.CF_API_TOKEN }}
           TF_VAR_cloudflare_zone_id: ${{ secrets.CF_ZONE_ID }}
-          TF_VAR_ssh_key_ids: ${{ secrets.DO_SSH_KEY_IDS }}
+          TF_VAR_ssh_key_fingerprint: ${{ secrets.DO_SSH_KEY_FINGERPRINT }}
         run: |
           if [ -z "${TF_VAR_cloudflare_zone_id}" ]; then
             echo "ERROR: CF_ZONE_ID secret is not set"
             exit 1
           fi
-          if [ -z "${TF_VAR_ssh_key_ids}" ]; then
-            echo "ERROR: DO_SSH_KEY_IDS secret is not set"
+          if [ -z "${TF_VAR_ssh_key_fingerprint}" ]; then
+            echo "ERROR: DO_SSH_KEY_FINGERPRINT secret is not set"
             exit 1
           fi
           terraform plan -no-color -out=tfplan
@@ -82,5 +82,5 @@ jobs:
           TF_VAR_do_token: ${{ secrets.DO_TOKEN }}
           TF_VAR_cloudflare_api_token: ${{ secrets.CF_API_TOKEN }}
           TF_VAR_cloudflare_zone_id: ${{ secrets.CF_ZONE_ID }}
-          TF_VAR_ssh_key_ids: ${{ secrets.DO_SSH_KEY_IDS }}
+          TF_VAR_ssh_key_fingerprint: ${{ secrets.DO_SSH_KEY_FINGERPRINT }}
         run: terraform apply -auto-approve tfplan
