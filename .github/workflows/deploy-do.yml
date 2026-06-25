@@ -138,6 +138,22 @@ jobs:
           fi
           echo "SSH_TEST_END"
 
+          # Wait for cloud-init to complete (docker installation)
+          echo "--- WAITING FOR CLOUD-INIT ---"
+          for i in $(seq 1 60); do
+            ssh $SSH_OPTS root@$HOST "cloud-init status --wait 2>/dev/null" && break
+            echo "Waiting for cloud-init... ($i/60)"
+            sleep 10
+          done
+
+          # Verify docker is available
+          echo "--- VERIFYING DOCKER ---"
+          for i in $(seq 1 30); do
+            ssh $SSH_OPTS root@$HOST "which docker" && break
+            echo "Waiting for docker... ($i/30)"
+            sleep 10
+          done
+
           # Write .env directly on the droplet via SSH (secrets never in runner logs)
           echo "--- WRITING .ENV ON DROPLET ---"
           ssh $SSH_OPTS root@$HOST "
