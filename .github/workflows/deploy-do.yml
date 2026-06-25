@@ -8,18 +8,10 @@ on:
         type: choice
         options: [dev, prod]
         default: dev
-  push:
+  workflow_run:
+    workflows: ["terraform-do"]
+    types: [completed]
     branches: [main, develop]
-    paths:
-      - "**/*.ts"
-      - "**/*.tsx"
-      - "**/*.json"
-      - "package.json"
-      - "package-lock.json"
-      - "pnpm-lock.yaml"
-      - "next.config.js"
-      - "infra/docker/**"
-      - ".github/workflows/deploy-do.yml"
 
 env:
   IMAGE_TAG: ${{ github.sha }}
