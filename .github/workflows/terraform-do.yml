@@ -60,6 +60,7 @@ jobs:
             -var="do_token=${{ secrets.DO_TOKEN }}" \
             -var="cloudflare_api_token=${{ secrets.CF_API_TOKEN }}" \
             -var="cloudflare_zone_id=${{ secrets.CF_ZONE_ID }}" \
+            -var="ssh_key_ids=[${{ secrets.DO_SSH_KEY_IDS }}]" \
             -no-color \
             -out=tfplan
         continue-on-error: false

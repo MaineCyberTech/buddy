@@ -15,3 +15,9 @@ variable "cloudflare_zone_id" {
   type        = string
   sensitive   = true
 }
+
+variable "ssh_key_ids" {
+  description = "SSH key IDs to inject into droplet"
+  type        = list(string)
+  default     = []
+}

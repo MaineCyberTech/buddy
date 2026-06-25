@@ -19,6 +19,7 @@ module "digitalocean" {
   droplet_size = "s-4vcpu-4gb"
   region       = "nyc3"
   tags         = ["buddy", "prod"]
+  ssh_key_ids  = var.ssh_key_ids
 }
 
 module "cloudflare" {
