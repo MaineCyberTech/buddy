@@ -74,7 +74,7 @@ resource "digitalocean_project" "main" {
 
 # Firewall
 resource "digitalocean_firewall" "web" {
-  name = "${var.environment}-buddy-web"
+  name = "${var.environment}-buddy-web-${var.droplet_name}"
 
   droplet_ids = digitalocean_droplet.app[*].id
 
