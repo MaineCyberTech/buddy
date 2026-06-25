@@ -32,10 +32,10 @@ variable "region" {
   default     = "nyc3"
 }
 
-variable "ssh_key_fingerprint" {
-  description = "SSH key fingerprint (md5) to inject"
-  type        = string
-  default     = ""
+variable "ssh_key_ids" {
+  description = "SSH key IDs to inject"
+  type        = list(string)
+  default     = []
 }
 
 variable "reserved_ip" {
@@ -127,18 +127,44 @@ resource "digitalocean_droplet" "app" {
   name       = var.droplet_name
   region     = var.region
   size       = var.droplet_size
-  ssh_keys   = var.ssh_key_fingerprint != "" ? [var.ssh_key_fingerprint] : []
+  ssh_keys   = var.ssh_key_ids
   tags       = concat(var.tags, ["${var.environment}"])
   monitoring = true
 
   user_data = <<-EOF
     #cloud-config
+    hostname: ${var.droplet_name}
+    manage_etc_hosts: true
+
     package_update: true
+    package_upgrade: true
+
     packages:
-      - docker-compose-plugin
+      - docker.io
+      - docker-compose-v2
+      - ufw
+
+    write_files:
+      - path: /etc/docker/daemon.json
+        content: |
+          {
+            "log-driver": "json-file",
+            "log-opts": {
+              "max-size": "10m",
+              "max-file": "3"
+            }
+          }
+
     runcmd:
       - systemctl enable docker
       - systemctl start docker
+      - mkdir -p /opt/buddy
+      - ufw --force enable
+      - ufw allow 22/tcp
+      - ufw allow 80/tcp
+      - ufw allow 443/tcp
+
+    final_message: "Buddy droplet ready. Environment: ${var.environment}."
   EOF
 }
 
