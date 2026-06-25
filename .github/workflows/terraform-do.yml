@@ -40,9 +40,22 @@ jobs:
         run: |
           if [[ "${{ github.ref_name }}" == "main" ]]; then
             echo "name=prod" >> $GITHUB_OUTPUT
+            echo "droplet_name=buddy-prod-droplet" >> $GITHUB_OUTPUT
           else
             echo "name=dev" >> $GITHUB_OUTPUT
+            echo "droplet_name=buddy-dev-droplet" >> $GITHUB_OUTPUT
           fi
+
+      - name: Cleanup duplicate droplets
+        run: |
+          curl -s -H "Authorization: Bearer ${{ secrets.DO_TOKEN }}" \
+            "https://api.digitalocean.com/v2/droplets?page=1&per_page=200" \
+            | jq -r --arg name "${{ steps.env.outputs.droplet_name }}" '[.droplets[] | select(.name==$name)] | sort_by(.created_at) | .[:-1][] | .id' \
+            | while read OLD_ID; do
+              echo "Destroying old droplet $OLD_ID"
+              curl -s -X DELETE -H "Authorization: Bearer ${{ secrets.DO_TOKEN }}" \
+                "https://api.digitalocean.com/v2/droplets/$OLD_ID"
+            done
 
       - name: Terraform fmt
         run: terraform fmt -check
