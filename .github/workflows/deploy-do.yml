@@ -154,12 +154,9 @@ jobs:
             sleep 10
           done
 
-          # Write .env file to temp file locally, then transfer via base64
+          # Write .env file locally, then transfer via base64
           echo "--- WRITING .ENV ON DROPLET ---"
-          cat > /tmp/buddy.env << ENVEOF
-NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
-NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
-ENVEOF
+          printf "NEXT_PUBLIC_SUPABASE_URL=%s\nNEXT_PUBLIC_SUPABASE_ANON_KEY=%s\n" "${NEXT_PUBLIC_SUPABASE_URL}" "${NEXT_PUBLIC_SUPABASE_ANON_KEY}" > /tmp/buddy.env
           base64 -w0 /tmp/buddy.env | ssh $SSH_OPTS root@$HOST "base64 -d > /opt/buddy/.env && chmod 600 /opt/buddy/.env" 2>&1
 
           echo "--- WRITING DEPLOY.SH ---"
