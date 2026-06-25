@@ -47,7 +47,7 @@ jobs:
       - name: Terraform Init
         run: |
           terraform init \
-            -backend-config="bucket=buddy-terraform-state-${{ github.ref_name == 'main' && 'prod' || 'dev' }}" \
+            -backend-config="bucket=buddy-terraform-state-${{ github.ref_name == 'main' && 'production' || 'development' }}" \
             -backend-config="endpoint=https://nyc3.digitaloceanspaces.com"
 
       - name: Terraform Validate
