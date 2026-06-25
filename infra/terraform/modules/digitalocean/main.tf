@@ -131,18 +131,15 @@ resource "digitalocean_droplet" "app" {
   tags       = concat(var.tags, ["${var.environment}"])
   monitoring = true
 
-  connection {
-    type = "ssh"
-    user = "root"
-    host = self.ipv4_address
-  }
-
-  provisioner "remote-exec" {
-    inline = [
-      "apt-get update -qq",
-      "apt-get install -y -qq docker-compose-plugin",
-    ]
-  }
+  user_data = <<-EOF
+    #cloud-config
+    package_update: true
+    packages:
+      - docker-compose-plugin
+    runcmd:
+      - systemctl enable docker
+      - systemctl start docker
+  EOF
 }
 
 # Reserved IP
