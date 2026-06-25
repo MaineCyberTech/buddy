@@ -64,21 +64,6 @@ provider "digitalocean" {
   token = var.do_token
 }
 
-# Spaces bucket for terraform state
-resource "digitalocean_spaces_bucket" "terraform_state" {
-  name   = "buddy-terraform-state"
-  region = var.region
-  acl    = "private"
-
-  versioning {
-    enabled = true
-  }
-
-  lifecycle {
-    prevent_destroy = true
-  }
-}
-
 # Project
 resource "digitalocean_project" "main" {
   name        = var.project_name
@@ -138,7 +123,7 @@ resource "digitalocean_firewall" "web" {
 
 # Droplet
 resource "digitalocean_droplet" "app" {
-  image      = "docker-24-04"
+  image      = "ubuntu-24-04-x64"
   name       = var.droplet_name
   region     = var.region
   size       = var.droplet_size
@@ -173,11 +158,6 @@ resource "digitalocean_project_resources" "main" {
     digitalocean_droplet.app[*].urn,
     [digitalocean_reserved_ip.main.urn],
   )
-}
-
-output "spaces_bucket_name" {
-  description = "Spaces bucket name for terraform state"
-  value       = digitalocean_spaces_bucket.terraform_state.name
 }
 
 output "droplet_ip" {
