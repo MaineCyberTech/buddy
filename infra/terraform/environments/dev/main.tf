@@ -1,8 +1,13 @@
 terraform {
   backend "s3" {
-    bucket = "buddy-terraform-state"
-    key    = "dev/terraform.tfstate"
-    region = "us-east-1"
+    bucket                      = "buddy-terraform-state"
+    key                         = "dev/terraform.tfstate"
+    region                      = "us-east-1"
+    endpoint                    = "nyc3.digitaloceanspaces.com"
+    skip_credentials_validation = true
+    skip_metadata_api_check     = true
+    skip_requesting_account_id  = true
+    encrypt                     = true
   }
 }
 
@@ -12,19 +17,29 @@ module "digitalocean" {
   project_name = "Buddy"
   environment  = "dev"
   droplet_name = "buddy-dev-droplet"
-  droplet_size = "s-2vcpu-2gb"
+  droplet_size = "s-1vcpu-512mb-10gb"
   region       = "nyc3"
   tags         = ["buddy", "dev"]
 }
 
 module "cloudflare" {
-  source              = "../../modules/cloudflare"
+  source               = "../../modules/cloudflare"
   cloudflare_api_token = var.cloudflare_api_token
-  zone_id             = var.cloudflare_zone_id
-  environment         = "dev"
-  app_domain          = "buddy.mainecybertech.us"
-  api_domain          = "buddy-api.mainecybertech.us"
-  app_ip              = module.digitalocean.reserved_ip
-  proxied             = true
-  tunnel_enabled      = false
+  zone_id              = var.cloudflare_zone_id
+  environment          = "dev"
+  app_domain           = "buddy.mainecybertech.us"
+  api_domain           = "buddy-api.mainecybertech.us"
+  app_ip               = module.digitalocean.reserved_ip
+  proxied              = true
+  tunnel_enabled       = false
+}
+
+output "droplet_ip" {
+  description = "Droplet public IPv4 address"
+  value       = module.digitalocean.droplet_ip
+}
+
+output "reserved_ip" {
+  description = "Reserved IP address"
+  value       = module.digitalocean.reserved_ip
 }

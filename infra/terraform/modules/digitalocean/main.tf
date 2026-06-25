@@ -50,9 +50,33 @@ variable "tags" {
   default     = ["buddy"]
 }
 
+terraform {
+  required_providers {
+    digitalocean = {
+      source  = "digitalocean/digitalocean"
+      version = "~> 2.47"
+    }
+  }
+}
+
 # Provider
 provider "digitalocean" {
   token = var.do_token
+}
+
+# Spaces bucket for terraform state
+resource "digitalocean_spaces_bucket" "terraform_state" {
+  name   = "buddy-terraform-state"
+  region = var.region
+  acl    = "private"
+
+  versioning {
+    enabled = true
+  }
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 # Project
@@ -114,12 +138,12 @@ resource "digitalocean_firewall" "web" {
 
 # Droplet
 resource "digitalocean_droplet" "app" {
-  image     = "docker-24-04"
-  name      = var.droplet_name
-  region    = var.region
-  size      = var.droplet_size
-  ssh_keys  = var.ssh_key_ids
-  tags      = concat(var.tags, ["${var.environment}"])
+  image      = "docker-24-04"
+  name       = var.droplet_name
+  region     = var.region
+  size       = var.droplet_size
+  ssh_keys   = var.ssh_key_ids
+  tags       = concat(var.tags, ["${var.environment}"])
   monitoring = true
 
   connection {
@@ -149,4 +173,19 @@ resource "digitalocean_project_resources" "main" {
     digitalocean_droplet.app[*].urn,
     [digitalocean_reserved_ip.main.urn],
   )
+}
+
+output "spaces_bucket_name" {
+  description = "Spaces bucket name for terraform state"
+  value       = digitalocean_spaces_bucket.terraform_state.name
+}
+
+output "droplet_ip" {
+  description = "Droplet public IPv4 address"
+  value       = digitalocean_droplet.app.ipv4_address
+}
+
+output "reserved_ip" {
+  description = "Reserved IP address"
+  value       = digitalocean_reserved_ip.main.ip_address
 }

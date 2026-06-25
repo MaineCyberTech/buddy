@@ -1,8 +1,13 @@
 terraform {
   backend "s3" {
-    bucket = "buddy-terraform-state"
-    key    = "prod/terraform.tfstate"
-    region = "us-east-1"
+    bucket                      = "buddy-terraform-state"
+    key                         = "prod/terraform.tfstate"
+    region                      = "us-east-1"
+    endpoint                    = "nyc3.digitaloceanspaces.com"
+    skip_credentials_validation = true
+    skip_metadata_api_check     = true
+    skip_requesting_account_id  = true
+    encrypt                     = true
   }
 }
 
@@ -18,13 +23,23 @@ module "digitalocean" {
 }
 
 module "cloudflare" {
-  source              = "../../modules/cloudflare"
+  source               = "../../modules/cloudflare"
   cloudflare_api_token = var.cloudflare_api_token
-  zone_id             = var.cloudflare_zone_id
-  environment         = "prod"
-  app_domain          = "buddy.mainecybertech.com"
-  api_domain          = "buddy-api.mainecybertech.com"
-  app_ip              = module.digitalocean.reserved_ip
-  proxied             = true
-  tunnel_enabled      = false
+  zone_id              = var.cloudflare_zone_id
+  environment          = "prod"
+  app_domain           = "buddy.mainecybertech.com"
+  api_domain           = "buddy-api.mainecybertech.com"
+  app_ip               = module.digitalocean.reserved_ip
+  proxied              = true
+  tunnel_enabled       = false
+}
+
+output "droplet_ip" {
+  description = "Droplet public IPv4 address"
+  value       = module.digitalocean.droplet_ip
+}
+
+output "reserved_ip" {
+  description = "Reserved IP address"
+  value       = module.digitalocean.reserved_ip
 }

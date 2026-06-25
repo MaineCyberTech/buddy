@@ -1,0 +1,64 @@
+name: terraform-do
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, develop]
+    paths:
+      - "infra/terraform/**"
+      - ".github/workflows/terraform-do.yml"
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infra/terraform/environments/${{ github.ref_name == 'main' && 'prod' || 'dev' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9
+
+      - name: Determine environment
+        id: env
+        run: |
+          if [[ "${{ github.ref_name }}" == "main" ]]; then
+            echo "name=prod" >> $GITHUB_OUTPUT
+          else
+            echo "name=dev" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Terraform fmt
+        run: terraform fmt -check
+        continue-on-error: true
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        id: plan
+        run: |
+          terraform plan \
+            -var="do_token=${{ secrets.DO_TOKEN }}" \
+            -var="cloudflare_api_token=${{ secrets.CF_API_TOKEN }}" \
+            -var="cloudflare_zone_id=${{ secrets.CF_ZONE_ID }}" \
+            -no-color \
+            -out=tfplan
+        continue-on-error: false
+
+      - name: Terraform Apply
+        if: github.ref_name == 'main' || github.ref_name == 'develop'
+        environment: ${{ github.ref_name == 'main' && 'prod-approval' || 'dev' }}
+        run: terraform apply -auto-approve tfplan

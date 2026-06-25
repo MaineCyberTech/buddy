@@ -1,0 +1,213 @@
+name: deploy-do
+
+on:
+  workflow_dispatch:
+    inputs:
+      deploy_target:
+        description: "Target deployment environment"
+        type: choice
+        options: [dev, prod]
+        default: dev
+  push:
+    branches: [main, develop]
+    paths:
+      - "**/*.ts"
+      - "**/*.tsx"
+      - "**/*.json"
+      - "package.json"
+      - "package-lock.json"
+      - "pnpm-lock.yaml"
+      - "next.config.js"
+      - "infra/docker/**"
+      - ".github/workflows/deploy-do.yml"
+
+env:
+  IMAGE_TAG: ${{ github.sha }}
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    environment:
+      name: ${{ github.ref_name == 'main' && 'prod' || 'dev' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Determine environment
+        id: env
+        run: |
+          if [[ "${{ github.ref_name }}" == "main" ]]; then
+            ENV_NAME=prod
+            APP_DOMAIN=buddy.mainecybertech.com
+            API_DOMAIN=buddy-api.mainecybertech.com
+            DROPLET_NAME=buddy-prod-droplet
+          else
+            ENV_NAME=dev
+            APP_DOMAIN=buddy.mainecybertech.us
+            API_DOMAIN=buddy-api.mainecybertech.us
+            DROPLET_NAME=buddy-dev-droplet
+          fi
+          echo "name=$ENV_NAME" >> $GITHUB_OUTPUT
+          echo "app_domain=$APP_DOMAIN" >> $GITHUB_OUTPUT
+          echo "api_domain=$API_DOMAIN" >> $GITHUB_OUTPUT
+          echo "droplet_name=$DROPLET_NAME" >> $GITHUB_OUTPUT
+          echo "ghcr_prefix=ghcr.io/$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push App image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: infra/docker/app.Dockerfile
+          push: true
+          tags: ${{ steps.env.outputs.ghcr_prefix }}/buddy-app:${{ env.IMAGE_TAG }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DO_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keygen -p -P "${{ secrets.DO_SSH_PASSPHRASE }}" -N "" -f ~/.ssh/id_rsa
+
+      - name: Resolve droplet IP
+        id: ip
+        run: |
+          set -e
+          DO_TOKEN="${{ secrets.DO_TOKEN }}"
+          DROPLET_NAME="${{ steps.env.outputs.droplet_name }}"
+          ALL_DROPLETS=$(curl -sf -H "Authorization: Bearer $DO_TOKEN" \
+            "https://api.digitalocean.com/v2/droplets?page=1&per_page=200")
+          IP=$(echo "$ALL_DROPLETS" | jq -r --arg name "$DROPLET_NAME" '[.droplets[] | select(.name==$name)] | sort_by(.created_at) | last | .networks.v4[0].ip_address // empty')
+          if [ -z "$IP" ]; then
+            echo "ERROR: No $DROPLET_NAME droplet found. Droplets:"
+            echo "$ALL_DROPLETS" | jq '[.droplets[] | {name, ip: .networks.v4[0].ip_address, created: .created_at}]'
+            exit 1
+          fi
+          echo "droplet_ip=$IP" >> $GITHUB_OUTPUT
+          echo "Using droplet IP: $IP"
+
+      - name: Deploy to DigitalOcean
+        shell: bash
+        env:
+          IMAGE_TAG: ${{ env.IMAGE_TAG }}
+          GHCR_IMAGE_PREFIX: ${{ steps.env.outputs.ghcr_prefix }}
+          GHCR_USERNAME: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HOST: ${{ steps.ip.outputs.droplet_ip }}
+          CF_ORIGIN_CERT: ${{ secrets.CF_ORIGIN_CERT }}
+          CF_ORIGIN_KEY: ${{ secrets.CF_ORIGIN_KEY }}
+          APP_DOMAIN: ${{ steps.env.outputs.app_domain }}
+          API_DOMAIN: ${{ steps.env.outputs.api_domain }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        run: |
+          echo "SSH_TEST_BEGIN"
+          # Minimal SSH test with retries
+          SSH_OPTS="-o StrictHostKeyChecking=no -o LogLevel=ERROR -o ServerAliveInterval=60 -o ServerAliveCountMax=10 -o ConnectTimeout=10"
+          for i in $(seq 1 30); do
+            echo "SSH attempt $i/30..."
+            SSH_OUTPUT=$(ssh $SSH_OPTS root@$HOST "echo ALIVE_$(date +%s)" 2>&1)
+            SSH_EXIT=$?
+            if [ $SSH_EXIT -eq 0 ]; then
+              echo "SSH ready after $((i * 10))s"
+              echo "SSH_OUTPUT=$SSH_OUTPUT"
+              break
+            fi
+            echo "Attempt $i failed (exit $SSH_EXIT): $SSH_OUTPUT"
+            echo "Retrying in 10s..."
+            sleep 10
+          done
+          if [ $SSH_EXIT -ne 0 ]; then
+            echo "SSH never became available after 30 attempts"
+            exit 1
+          fi
+          echo "SSH_TEST_END"
+
+          # Write .env directly on the droplet via SSH (secrets never in runner logs)
+          echo "--- WRITING .ENV ON DROPLET ---"
+          ssh $SSH_OPTS root@$HOST "
+            mkdir -p /opt/buddy
+            cat > /opt/buddy/.env << 'ENVEOF'
+            NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+            NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+            ENVEOF
+            chmod 600 /opt/buddy/.env
+          " 2>&1
+
+          echo "--- WRITING DEPLOY.SH ---"
+          cat > /tmp/deploy.sh << 'DEPLOYSCRIPT'
+          #!/bin/bash
+          set -euo pipefail
+          cd /opt/buddy
+          echo "--- FREEING DISK SPACE ---"
+          docker image prune -af || true
+          IMAGE_TAG="$1" GHCR_IMAGE_PREFIX="$2" docker compose -f docker-compose.yml up -d --no-deps app caddy
+          docker image prune -af
+          sleep 15
+          docker compose -f docker-compose.yml ps --format "table {{.Name}}\t{{.Status}}"
+          DEPLOYSCRIPT
+          chmod +x /tmp/deploy.sh
+
+          echo "--- ENSURING /opt/buddy EXISTS ---"
+          ssh $SSH_OPTS root@$HOST "mkdir -p /opt/buddy/certs" 2>&1
+
+          echo "--- TRANSFERRING DEPLOY.SH ---"
+          base64 -w0 /tmp/deploy.sh | ssh $SSH_OPTS root@$HOST "base64 -d > /tmp/deploy.sh && chmod +x /tmp/deploy.sh" 2>&1
+
+          echo "--- TRANSFERRING COMPOSE FILE ---"
+          if [[ "${{ steps.env.outputs.name }}" == "prod" ]]; then
+            base64 -w0 infra/docker/docker-compose.prod.yml | ssh $SSH_OPTS root@$HOST "base64 -d > /opt/buddy/docker-compose.yml" 2>&1
+          else
+            base64 -w0 infra/docker/docker-compose.devremote.yml | ssh $SSH_OPTS root@$HOST "base64 -d > /opt/buddy/docker-compose.yml" 2>&1
+          fi
+
+          echo "--- TRANSFERRING CADDYFILE ---"
+          if [[ "${{ steps.env.outputs.name }}" == "prod" ]]; then
+            base64 -w0 infra/docker/Caddyfile.prod | ssh $SSH_OPTS root@$HOST "base64 -d > /opt/buddy/Caddyfile" 2>&1
+          else
+            base64 -w0 infra/docker/Caddyfile | ssh $SSH_OPTS root@$HOST "base64 -d > /opt/buddy/Caddyfile" 2>&1
+          fi
+
+          echo "--- TRANSFERRING TLS CERTS ---"
+          if [ -n "$CF_ORIGIN_CERT" ]; then
+            echo "$CF_ORIGIN_CERT" > /tmp/fullchain.pem
+            echo "$CF_ORIGIN_KEY" > /tmp/privkey.pem
+            ssh $SSH_OPTS root@$HOST "mkdir -p /opt/buddy/certs"
+            cat /tmp/fullchain.pem | ssh $SSH_OPTS root@$HOST "cat > /opt/buddy/certs/fullchain.pem"
+            cat /tmp/privkey.pem | ssh $SSH_OPTS root@$HOST "cat > /opt/buddy/certs/privkey.pem"
+            ssh $SSH_OPTS root@$HOST "chmod 600 /opt/buddy/certs/privkey.pem /opt/buddy/certs/fullchain.pem"
+            echo "CERT_EXIT=$?"
+          else
+            echo "CF_ORIGIN_CERT secret not set — using self-signed certs"
+          fi
+
+          echo "--- REMOVING OLD BUDDY IMAGES ON DROPLET ---"
+          ssh $SSH_OPTS root@$HOST "docker image ls --format '{{.Repository}}:{{.Tag}}' | grep 'buddy-' | grep -v ':$IMAGE_TAG' | xargs -r docker rmi 2>/dev/null; true" 2>&1
+
+          echo "--- LOGGING INTO GHCR ON DROPLET ---"
+          echo "$GHCR_TOKEN" | ssh $SSH_OPTS root@$HOST "docker login ghcr.io -u $GHCR_USERNAME --password-stdin" 2>&1
+
+          echo "--- PULLING IMAGES ON DROPLET ---"
+          ssh $SSH_OPTS root@$HOST "
+            docker pull $GHCR_IMAGE_PREFIX/buddy-app:$IMAGE_TAG
+          " 2>&1
+
+          echo "--- EXECUTING DEPLOY ---"
+          ssh $SSH_OPTS root@$HOST "bash /tmp/deploy.sh $IMAGE_TAG $GHCR_IMAGE_PREFIX" 2>&1
