@@ -20,9 +20,7 @@ services:
       - app
 
   app:
-    build:
-      context: ../../
-      dockerfile: infra/docker/app.Dockerfile
+    image: ${GHCR_IMAGE_PREFIX}/buddy-app:${IMAGE_TAG}
     container_name: buddy-app-prod
     restart: unless-stopped
     mem_limit: 512m
