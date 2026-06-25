@@ -45,7 +45,10 @@ jobs:
         continue-on-error: true
 
       - name: Terraform Init
-        run: terraform init
+        run: |
+          terraform init \
+            -backend-config="bucket=buddy-terraform-state" \
+            -backend-config="endpoint=https://nyc3.digitaloceanspaces.com"
 
       - name: Terraform Validate
         run: terraform validate
