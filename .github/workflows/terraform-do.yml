@@ -60,5 +60,4 @@ jobs:
 
       - name: Terraform Apply
         if: github.ref_name == 'main' || github.ref_name == 'develop'
-        environment: ${{ github.ref_name == 'main' && 'prod-approval' || 'dev' }}
         run: terraform apply -auto-approve tfplan
