@@ -51,7 +51,7 @@ jobs:
             ENV_NAME=dev
             APP_DOMAIN=buddy.mainecybertech.us
             API_DOMAIN=buddy-api.mainecybertech.us
-            DROPLET_NAME=mct-portal-dev
+            DROPLET_NAME=buddy-dev-droplet
           fi
           echo "name=$ENV_NAME" >> $GITHUB_OUTPUT
           echo "app_domain=$APP_DOMAIN" >> $GITHUB_OUTPUT
