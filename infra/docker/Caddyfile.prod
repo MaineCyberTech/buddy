@@ -1,5 +1,4 @@
 buddy.mainecybertech.com {
-    tls /etc/caddy/certs/fullchain.pem /etc/caddy/certs/privkey.pem
     reverse_proxy app:3000
     header {
         X-Frame-Options "DENY"
@@ -10,7 +9,6 @@ buddy.mainecybertech.com {
 }
 
 buddy-api.mainecybertech.com {
-    tls /etc/caddy/certs/fullchain.pem /etc/caddy/certs/privkey.pem
     reverse_proxy app:3000
     header {
         X-Frame-Options "DENY"
