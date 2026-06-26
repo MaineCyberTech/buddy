@@ -29,7 +29,7 @@ module "cloudflare" {
   environment          = "development"
   app_domain           = "buddy.mainecybertech.us"
   api_domain           = "buddy-api.mainecybertech.us"
-  app_ip               = module.digitalocean.reserved_ip
+  app_ip               = module.digitalocean.droplet_ip
   proxied              = true
 }
 
