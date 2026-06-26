@@ -71,6 +71,39 @@ jobs:
             -backend-config="bucket=buddy-terraform-state-${{ github.ref_name == 'main' && 'production' || 'development' }}" \
             -backend-config="endpoint=https://nyc3.digitaloceanspaces.com"
 
+      - name: Import existing resources
+        env:
+          TF_VAR_do_token: ${{ secrets.DO_TOKEN }}
+          TF_VAR_cloudflare_api_token: ${{ secrets.CF_API_TOKEN }}
+          TF_VAR_cloudflare_zone_id: ${{ secrets.CF_ZONE_ID }}
+          TF_VAR_ssh_key_fingerprint: ${{ secrets.DO_SSH_KEY_FINGERPRINT }}
+        run: |
+          # Import firewall if exists
+          FW_JSON=$(curl -s -H "Authorization: Bearer ${{ secrets.DO_TOKEN }}" \
+            "https://api.digitalocean.com/v2/firewalls?page=1&per_page=200")
+          FW_ID=$(echo "$FW_JSON" | jq -r --arg prefix "${{ steps.env.outputs.name }}-buddy-web-" '[.firewalls[] | select(.name | startswith($prefix))] | sort_by(.created_at) | last | .id // empty')
+          if [ -n "$FW_ID" ]; then
+            echo "Importing firewall $FW_ID"
+            terraform import -input=false module.digitalocean.digitalocean_firewall.web "$FW_ID" || echo "Firewall import failed"
+          fi
+          # Import DNS records
+          for RECORD in app api; do
+            DOMAIN="${RECORD}"
+            if [ "$RECORD" = "app" ]; then
+              DOMAIN="buddy.${{ steps.env.outputs.name == 'prod' && 'mainecybertech.com' || 'mainecybertech.us' }}"
+            else
+              DOMAIN="buddy-api.${{ steps.env.outputs.name == 'prod' && 'mainecybertech.com' || 'mainecybertech.us' }}"
+            fi
+            RECORD_JSON=$(curl -s -H "Authorization: Bearer $TF_VAR_cloudflare_api_token" \
+              "https://api.cloudflare.com/client/v4/zones/$TF_VAR_cloudflare_zone_id/dns_records?type=A&name=$DOMAIN")
+            RECORD_ID=$(echo "$RECORD_JSON" | jq -r '.result[0].id // empty')
+            if [ -n "$RECORD_ID" ]; then
+              RESOURCE="module.cloudflare.cloudflare_dns_record.$([ "$RECORD" = "app" ] && echo "app" || echo "api")"
+              echo "Importing DNS $DOMAIN ($RECORD_ID) as $RESOURCE"
+              terraform import -input=false "$RESOURCE" "$TF_VAR_cloudflare_zone_id/$RECORD_ID" || echo "DNS import failed"
+            fi
+          done
+
       - name: Terraform Validate
         run: terraform validate
 
