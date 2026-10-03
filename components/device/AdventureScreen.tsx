@@ -12,7 +12,12 @@ interface AdventureScreenProps {
 }
 
 export function AdventureScreen({ onBack }: AdventureScreenProps) {
-  const { buddy, inventory, setBuddy, setInventory, setCurrentAdventureResult, guestId } = useGameStore();
+  const buddy = useGameStore((s) => s.buddy);
+  const inventory = useGameStore((s) => s.inventory);
+  const setBuddy = useGameStore((s) => s.setBuddy);
+  const setInventory = useGameStore((s) => s.setInventory);
+  const setCurrentAdventureResult = useGameStore((s) => s.setCurrentAdventureResult);
+  const guestId = useGameStore((s) => s.guestId);
   const [selectedLocation, setSelectedLocation] = useState<LocationDefinition | null>(null);
   const [result, setResult] = useState<AdventureResult | null>(null);
   const [loading, setLoading] = useState(false);

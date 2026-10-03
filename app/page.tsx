@@ -8,7 +8,7 @@ import { loadGame, hasSave } from '@/lib/storage/indexeddb';
 
 export default function HomePage() {
   const [loaded, setLoaded] = useState(false);
-  const { buddy, screen, setBuddy, setScreen } = useGameStore();
+  const { buddy, screen, setBuddy, setScreen, setGuestId } = useGameStore();
 
   useEffect(() => {
     const init = async () => {
@@ -16,6 +16,11 @@ export default function HomePage() {
         const save = await loadGame();
         if (save?.buddy) {
           setBuddy(save.buddy);
+          // Restore the persisted identity so saves stay bound to the same guest
+          // across reloads (ARCH-P2-002).
+          if (save.guestId) {
+            setGuestId(save.guestId);
+          }
           if (save.inventory) {
             useGameStore.getState().setInventory(save.inventory);
           }
@@ -29,7 +34,7 @@ export default function HomePage() {
       setLoaded(true);
     };
     init();
-  }, [setBuddy, setScreen]);
+  }, [setBuddy, setScreen, setGuestId]);
 
   if (!loaded) {
     return (

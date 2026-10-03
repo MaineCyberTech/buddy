@@ -27,25 +27,36 @@ const ACTIONS: { type: CareActionType; label: string; icon: string }[] = [
 ];
 
 export function MainDevice({ buddy: initialBuddy, initialTab = 'main' }: MainDeviceProps) {
-  const [currentBuddy, setCurrentBuddy] = useState(initialBuddy);
+  // The game store is the single source of truth for the device. `AdventureScreen`
+  // writes its result straight to the store, so reading `buddy` from the store here
+  // keeps the LCD/mood/HP/energy in sync without a remount (ARCH-P1-002).
+  const storedBuddy = useGameStore((s) => s.buddy);
+  const setBuddy = useGameStore((s) => s.setBuddy);
+  const updateBuddy = useGameStore((s) => s.updateBuddy);
+  const currentBuddy = storedBuddy ?? initialBuddy;
   const [tab, setTab] = useState<'main' | 'profile' | 'stats' | 'adventure' | 'inventory'>(initialTab);
   const [message, setMessage] = useState('');
   const [messageKey, setMessageKey] = useState(0);
   const [autoSaveStatus, setAutoSaveStatus] = useState('');
-  const updateBuddy = useGameStore((s) => s.updateBuddy);
   const buddyRef = useRef(initialBuddy);
+
+  // Seed the store from the prop only when it is empty (first mount / isolated use).
+  useEffect(() => {
+    if (!useGameStore.getState().buddy) {
+      setBuddy(initialBuddy);
+    }
+  }, [initialBuddy, setBuddy]);
 
   useEffect(() => {
     const buddy = buddyRef.current;
     const elapsed = Date.now() - buddy.lastInteraction;
     if (elapsed > 60_000) {
       const decayed = applyOfflineDecay(buddy, elapsed);
-      setCurrentBuddy(decayed);
-      updateBuddy({ needs: decayed.needs, mood: decayed.mood, health: decayed.health });
+      setBuddy(decayed);
       setMessage('Your buddy missed you!');
       setMessageKey((k) => k + 1);
     }
-  }, [updateBuddy]);
+  }, [setBuddy]);
 
   const handleAction = useCallback(
     async (action: CareActionType) => {
@@ -54,7 +65,6 @@ export function MainDevice({ buddy: initialBuddy, initialTab = 'main' }: MainDev
         inventory: updatedInventory,
         result,
       } = applyAction(currentBuddy, action, useGameStore.getState().inventory);
-      setCurrentBuddy(updated);
       updateBuddy(updated);
       useGameStore.getState().setInventory(updatedInventory);
       setMessage(result.message);

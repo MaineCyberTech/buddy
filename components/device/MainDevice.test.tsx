@@ -1,6 +1,6 @@
 import 'fake-indexeddb/auto';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { MainDevice } from '@/components/device/MainDevice';
 import { useGameStore } from '@/lib/buddy/store';
 import { createInitialBuddyState } from '@/lib/generation/engine';
@@ -82,5 +82,28 @@ describe('MainDevice', () => {
 
     expect(screen.getByText('Bud')).toBeTruthy();
     expect(screen.getByText(`the ${buddy.identity.speciesName}`)).toBeTruthy();
+  });
+});
+
+// ARCH-P1-002: the device must render the store's buddy (single source of truth),
+// not a private copy, so adventure results written to the store are reflected
+// immediately without remounting.
+describe('MainDevice store decoupling (ARCH-P1-002)', () => {
+  beforeEach(resetStore);
+
+  it('seeds the store from its prop and re-renders when the store buddy changes', () => {
+    const initial = createInitialBuddyState('guest-test', 'Tester');
+    render(<MainDevice buddy={initial} />);
+
+    expect(useGameStore.getState().buddy?.identity.nickname).toBe('Tester');
+    expect(screen.getByText(/Lv\.1/)).toBeTruthy();
+
+    const updated = { ...initial, level: 7, health: 42 };
+    act(() => {
+      useGameStore.getState().setBuddy(updated);
+    });
+
+    expect(screen.getByText(/Lv\.7/)).toBeTruthy();
+    expect(screen.getByText(/HP 42/)).toBeTruthy();
   });
 });
