@@ -9,7 +9,7 @@ import { LcdDisplay } from '@/components/device/LcdDisplay';
 import { StatBars, NeedBars } from '@/components/ui/StatBars';
 import { AdventureScreen } from '@/components/device/AdventureScreen';
 import { InventoryScreen } from '@/components/device/InventoryScreen';
-import { getStageName, getStageProgress } from '@/lib/progression/lifecycle';
+import { getStageName } from '@/lib/progression/lifecycle';
 
 interface MainDeviceProps {
   buddy: BuddyState;
