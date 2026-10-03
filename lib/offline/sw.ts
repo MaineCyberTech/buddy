@@ -3,7 +3,11 @@ export function registerServiceWorker(): void {
   if (!('serviceWorker' in navigator)) return;
 
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').then(
+    // Version the worker URL so each build installs a fresh worker and opens a
+    // new `buddy-cache-<buildId>` cache; the activate handler purges the rest
+    // (ARCH-P2-001).
+    const buildId = process.env.NEXT_PUBLIC_BUILD_ID ?? 'dev';
+    navigator.serviceWorker.register(`/sw.js?v=${encodeURIComponent(buildId)}`).then(
       (registration) => {
         console.log('SW registered:', registration.scope);
       },
