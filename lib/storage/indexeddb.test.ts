@@ -11,6 +11,7 @@ import {
 } from '@/lib/storage/indexeddb';
 import { createInitialBuddyState } from '@/lib/generation/engine';
 import { GameSave } from '@/lib/generation/types';
+import { SAVE_VERSION } from '@/lib/storage/schema';
 
 function makeSave(overrides: Partial<GameSave> = {}): GameSave {
   const buddy = createInitialBuddyState('storage-test-user', 'TestBuddy');
@@ -62,17 +63,19 @@ describe('Save round-trip', () => {
     expect(await loadGame()).toBeNull();
   });
 
-  it('keeps a v1 save at the supported schema version', async () => {
+  it('migrates a v1 save up to the supported schema version', async () => {
     await saveGame(makeSave({ version: 1 }));
 
-    expect((await loadGame())!.version).toBe(1);
+    // DATA-P1-001: loadGame must run the real migration, never rewrite the
+    // version without upgrading the payload.
+    expect((await loadGame())!.version).toBe(SAVE_VERSION);
   });
 
-  it('normalizes an unknown save version to the supported schema version', async () => {
+  it('rejects an unsupported save version instead of normalizing it', async () => {
     await saveGame(makeSave({ version: 99 }));
 
-    // loadGame must not hand callers a schema version the app cannot read.
-    expect((await loadGame())!.version).toBe(1);
+    // DATA-P1-002: a future/unknown schema must not be handed to callers.
+    expect(await loadGame()).toBeNull();
   });
 });
 
@@ -87,7 +90,7 @@ describe('Save metadata', () => {
     const meta = await getSaveMetadata();
 
     expect(meta?.exists).toBe(true);
-    expect(meta?.version).toBe(1);
+    expect(meta?.version).toBe(SAVE_VERSION);
     expect(meta?.updatedAt).toBe(1234);
     expect(meta?.nickname).toBe('TestBuddy');
   });

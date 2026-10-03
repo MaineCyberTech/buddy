@@ -1,5 +1,6 @@
 import { openDB, IDBPDatabase } from 'idb';
 import { GameSave } from '@/lib/generation/types';
+import { MAX_IMPORT_LENGTH, validateSave } from '@/lib/storage/schema';
 
 const DB_NAME = 'buddy-save';
 const DB_VERSION = 2;
@@ -44,13 +45,15 @@ export async function loadGame(): Promise<GameSave | null> {
     const entry = await db.get(STORE_NAME, SAVE_KEY);
     if (!entry?.value) return null;
 
-    const save = entry.value as GameSave;
-
-    if (save.version !== 1) {
-      save.version = 1;
+    // IndexedDB contents are user-editable, so migrate + validate before use.
+    // Never rewrite the version without running the matching migration.
+    const result = validateSave(entry.value);
+    if (!result.ok) {
+      console.error('Invalid save data:', result.error);
+      return null;
     }
 
-    return save;
+    return result.save;
   } catch (error) {
     console.error('Failed to load game:', error);
     return null;
@@ -85,12 +88,16 @@ export async function exportSave(): Promise<string> {
 
 export async function importSave(encoded: string): Promise<boolean> {
   try {
-    const json = atob(encoded);
-    const save = JSON.parse(json) as GameSave;
-    if (!save.version || !save.guestId) {
-      throw new Error('Invalid save format');
+    if (typeof encoded !== 'string' || encoded.length === 0 || encoded.length > MAX_IMPORT_LENGTH) {
+      throw new Error('Save payload size invalid');
     }
-    await saveGame(save);
+    const json = atob(encoded);
+    const raw = JSON.parse(json) as unknown;
+    const result = validateSave(raw);
+    if (!result.ok) {
+      throw new Error('Invalid save format: ' + result.error);
+    }
+    await saveGame(result.save);
     return true;
   } catch (error) {
     console.error('Failed to import save:', error);
