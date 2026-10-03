@@ -1,0 +1,99 @@
+name: Release
+
+# Tag-driven release. Publishing a `v*` tag builds and tests the app at the tagged
+# commit, generates an SBOM and a changelog that records the exact commit, packages
+# the build, attests its provenance, and publishes it as a GitHub Release. Every
+# artifact is therefore bound to the commit the tag points at.
+on:
+  push:
+    tags:
+      - "v*"
+
+# Read the repo; write the GitHub Release and the build-provenance attestation.
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: build / test / package / publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm run test
+
+      - name: Build
+        run: npm run build
+
+      - name: Record build id
+        id: build
+        run: |
+          {
+            echo "commit=$(git rev-parse HEAD)"
+            echo "short=$(git rev-parse --short HEAD)"
+            echo "tag=${GITHUB_REF_NAME}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Generate SBOM
+        run: npm sbom --sbom-format cyclonedx > sbom.cdx.json
+
+      - name: Generate changelog
+        run: |
+          prev="$(git describe --tags --abbrev=0 "${GITHUB_REF_NAME}^" 2>/dev/null || true)"
+          {
+            echo "# Release ${GITHUB_REF_NAME}"
+            echo
+            echo "- Commit: ${{ steps.build.outputs.commit }}"
+            echo "- Tag: ${GITHUB_REF_NAME}"
+            echo
+            if [ -n "$prev" ]; then
+              echo "## Changes since ${prev}"
+              git log --pretty=format:'- %h %s' "${prev}..${GITHUB_REF_NAME}"
+            else
+              echo "## Changes"
+              git log --pretty=format:'- %h %s'
+            fi
+            echo
+          } > CHANGELOG-RELEASE.md
+
+      - name: Package artifact
+        run: tar -czf "buddy-${GITHUB_REF_NAME}.tar.gz" .next public package.json package-lock.json sbom.cdx.json CHANGELOG-RELEASE.md
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: "buddy-${{ github.ref_name }}.tar.gz"
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.ref_name }}
+          body_path: CHANGELOG-RELEASE.md
+          files: |
+            buddy-${{ github.ref_name }}.tar.gz
+            sbom.cdx.json
