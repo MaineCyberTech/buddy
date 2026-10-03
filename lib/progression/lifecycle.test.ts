@@ -49,7 +49,7 @@ describe('Lifecycle System', () => {
 
     it('returns all 6 lifecycle stages', () => {
       const stages = [0, 30, 100, 300, 800, 2000].map(xp => calculateLifecycle(xp));
-      const uniqueStages = [...new Set(stages)];
+      const uniqueStages = Array.from(new Set(stages));
       expect(uniqueStages).toHaveLength(6);
     });
   });
