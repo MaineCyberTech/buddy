@@ -1,4 +1,5 @@
 import { BuddyState, InventoryState, Achievement, MemoryEntry } from '@/lib/generation/types';
+import { ITEM_MAP } from '@/data/items';
 
 export const ACHIEVEMENTS: Achievement[] = [
   {
@@ -142,4 +143,65 @@ export function checkAchievements(
   return ACHIEVEMENTS.filter(
     a => !unlocked.includes(a.id) && a.condition(state, inventory, totalAdventures)
   );
+}
+
+export interface AchievementGrantResult {
+  buddy: BuddyState;
+  inventory: InventoryState;
+  granted: Achievement[];
+}
+
+/**
+ * Evaluate and apply achievements for a state transition (FEAT-P1-001).
+ *
+ * Persists newly unlocked ids in `progression.achievements`, records a memory for
+ * each unlock, and grants the configured `rewardCoins` / `rewardItemId`. The
+ * `unlocked` list is the dedupe guard, so a reward is granted exactly once.
+ */
+export function grantAchievements(
+  buddy: BuddyState,
+  inventory: InventoryState,
+  totalAdventures: number
+): AchievementGrantResult {
+  const unlocked = buddy.progression?.achievements ?? [];
+  const granted = checkAchievements(buddy, inventory, totalAdventures, unlocked);
+
+  if (granted.length === 0) {
+    return { buddy, inventory, granted: [] };
+  }
+
+  const achievements = [...unlocked];
+  const items = inventory.items.map(i => ({ ...i }));
+  let coins = inventory.coins;
+
+  for (const achievement of granted) {
+    achievements.push(achievement.id);
+    if (achievement.rewardCoins) {
+      coins += achievement.rewardCoins;
+    }
+    if (achievement.rewardItemId && ITEM_MAP.has(achievement.rewardItemId)) {
+      const existing = items.find(i => i.id === achievement.rewardItemId);
+      if (existing) {
+        existing.quantity += 1;
+      } else {
+        items.push({ id: achievement.rewardItemId, quantity: 1 });
+      }
+    }
+  }
+
+  const memories = [
+    ...(buddy.progression?.memories ?? []),
+    ...granted.map(a => createMemory('achievement', a.name, a.description, a.icon)),
+  ];
+
+  return {
+    buddy: {
+      ...buddy,
+      progression: buddy.progression
+        ? { ...buddy.progression, achievements, memories }
+        : buddy.progression,
+    },
+    inventory: { coins, items },
+    granted,
+  };
 }

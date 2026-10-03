@@ -6,6 +6,8 @@ import {
 } from '@/lib/generation/types';
 import { LOCATION_MAP } from '@/data/locations';
 import { LOOT_TABLE_MAP } from '@/data/loot-tables';
+import { advanceProgression } from '@/lib/actions/care';
+import { grantAchievements } from '@/data/achievements';
 
 function rollLoot(rng: SeededRNG, lootTableId: string): { coins: number; items: { id: string; quantity: number }[]; xpGain: number } {
   const table = LOOT_TABLE_MAP.get(lootTableId);
@@ -144,6 +146,9 @@ export function applyAdventureResult(
     newLevel++;
   }
   newBuddy.level = newLevel;
+  // `xp` holds the remainder after level-ups (matching care actions); lifecycle
+  // thresholds are evaluated against lifetime XP.
+  newBuddy.xp = remainingXp;
 
   const newItems = [...newInventory.items];
   for (const item of result.itemsReceived) {
@@ -155,9 +160,24 @@ export function applyAdventureResult(
     }
   }
 
+  const lootedInventory = {
+    coins: newInventory.coins + result.coinsEarned,
+    items: newItems,
+  };
+
+  // Adventures change XP, so wire evolution + the `exploring` skill (FEAT-P1-002),
+  // then evaluate achievements. `AdventureScreen` increments `totalAdventures` after
+  // this returns, so evaluate against the post-adventure count (FEAT-P1-001).
+  const progressed = advanceProgression(newBuddy, 'exploring', newBuddy.stats.courage);
+  const granted = grantAchievements(
+    progressed,
+    lootedInventory,
+    (progressed.progression?.totalAdventures ?? 0) + 1
+  );
+
   return {
-    buddy: newBuddy,
-    inventory: { coins: newInventory.coins + result.coinsEarned, items: newItems },
+    buddy: granted.buddy,
+    inventory: granted.inventory,
   };
 }
 

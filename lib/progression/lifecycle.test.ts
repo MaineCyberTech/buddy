@@ -9,6 +9,7 @@ import {
 } from '@/lib/progression/lifecycle';
 import { createInitialBuddyState } from '@/lib/generation/engine';
 import { LifecycleStage } from '@/lib/generation/types';
+import { applyAction } from '@/lib/actions/care';
 
 describe('Lifecycle System', () => {
   describe('createInitialProgression', () => {
@@ -49,7 +50,7 @@ describe('Lifecycle System', () => {
 
     it('returns all 6 lifecycle stages', () => {
       const stages = [0, 30, 100, 300, 800, 2000].map(xp => calculateLifecycle(xp));
-      const uniqueStages = [...new Set(stages)];
+      const uniqueStages = Array.from(new Set(stages));
       expect(uniqueStages).toHaveLength(6);
     });
   });
@@ -85,6 +86,32 @@ describe('Lifecycle System', () => {
       buddy.progression = createInitialProgression();
       const result = checkEvolution(buddy);
       expect(result).toBe('child');
+    });
+  });
+
+  // FEAT-P1-002: evolution and skills must run in the live gameplay path, not just
+  // as pure helpers.
+  describe('live-path wiring (FEAT-P1-002)', () => {
+    it('evolves baby -> child once lifetime XP crosses 100', () => {
+      const buddy = createInitialBuddyState('evo-test', 'Test');
+      buddy.xp = 95;
+      buddy.level = 1;
+      const { buddy: updated } = applyAction(buddy, 'play');
+      expect(updated.progression.lifecycle).toBe('child');
+    });
+
+    it('grows the training skill on a train action', () => {
+      const buddy = createInitialBuddyState('skill-test', 'Test');
+      buddy.stats.discipline = 50;
+      const { buddy: updated } = applyAction(buddy, 'train');
+      expect(updated.progression.skills.training).toBeGreaterThan(0);
+    });
+
+    it('grows the social skill on a talk action', () => {
+      const buddy = createInitialBuddyState('social-test', 'Test');
+      buddy.stats.empathy = 50;
+      const { buddy: updated } = applyAction(buddy, 'talk');
+      expect(updated.progression.skills.social).toBeGreaterThan(0);
     });
   });
 
