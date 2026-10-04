@@ -1,0 +1,34 @@
+NOTICE
+======
+
+This file records ownership and third-party/vendored-content attribution for
+the "buddy" repository. It is an attribution notice, not a license grant.
+
+Ownership
+---------
+Copyright (c) 2026 Maine CyberTech. See repository history for authorship.
+
+Licensing status
+----------------
+No final license has been chosen. Absent an explicit license grant, all rights
+are reserved by default (see LICENSE, which records this pending status). The
+target license for the application code and for the vendored prompt pack is an
+open maintainer/legal decision tracked under finding SUPPLY-P1-001.
+
+Vendored content
+----------------
+docs/prompts/buddy_virtual_pet_v2_complete_prompt_pack/ is a planning and
+prompt pack committed under docs/prompts/ (87 files). Its authorship within the
+organization and its licensing are not recorded in-repo and are unconfirmed
+(finding SUPPLY-P2-003). It must not be redistributed outside the organization
+until its provenance and license are confirmed. Its own README (line 17) states
+that Tamaweb, Tamagotchi, and other copyrighted/proprietary projects must not
+be copied; the pack is documented in docs/README.md.
+
+Application dependencies
+------------------------
+Third-party npm dependencies retain their own licenses as declared in
+package.json / package-lock.json.
+
+This notice carries no license grant and does not modify the terms of any
+third-party component.

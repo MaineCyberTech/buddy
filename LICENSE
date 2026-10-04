@@ -1,0 +1,17 @@
+LICENSE - PENDING
+
+Copyright (c) 2026 Maine CyberTech. All rights reserved.
+
+This repository does not yet have a chosen license. Absent an explicit license
+grant, all rights are reserved by default: no permission is granted to use,
+copy, modify, or distribute this software or its contents.
+
+This file records the current, unlicensed status so the repository is not
+mistaken for one that grants rights. It is intentionally not a final license.
+The copyright holder must select and publish the project license (for example
+MIT or Apache-2.0 for an open-source release, or a proprietary license) and
+replace this file.
+
+This decision is tracked as an open question under finding SUPPLY-P1-001
+(audit run 20261003-0018-master-99abf29). See NOTICE for third-party and
+vendored-content attribution.
