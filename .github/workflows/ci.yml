@@ -92,6 +92,8 @@ jobs:
           echo "Add an allow/deny license check here once the project chooses a license."
 
   # Pull requests only: block a PR that introduces a high/critical advisory.
+  # Requires the repository Dependency graph to be enabled (Settings -> Security ->
+  # Code security and analysis). Until an admin enables it this job cannot run.
   dependency-review:
     name: dependency review
     if: github.event_name == 'pull_request'
