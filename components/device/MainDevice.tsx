@@ -49,21 +49,25 @@ export function MainDevice({ buddy: initialBuddy, initialTab = 'main' }: MainDev
 
   const handleAction = useCallback(
     async (action: CareActionType) => {
-      const { buddy: updated, result } = applyAction(currentBuddy, action);
+      const {
+        buddy: updated,
+        inventory: updatedInventory,
+        result,
+      } = applyAction(currentBuddy, action, useGameStore.getState().inventory);
       setCurrentBuddy(updated);
       updateBuddy(updated);
+      useGameStore.getState().setInventory(updatedInventory);
       setMessage(result.message);
       setMessageKey((k) => k + 1);
 
       try {
-        const inv = useGameStore.getState().inventory;
         await saveGame({
           version: 2,
           guestId: useGameStore.getState().guestId,
           buddy: updated,
           createdAt: updated.identity.generatedAt,
           updatedAt: Date.now(),
-          inventory: inv,
+          inventory: updatedInventory,
         });
         setAutoSaveStatus('saved');
         setTimeout(() => setAutoSaveStatus(''), 2000);

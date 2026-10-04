@@ -102,7 +102,8 @@ describe('Adventure System', () => {
       const { buddy, inventory } = createTestState();
       const result = runAdventure(buddy, inventory, 'backyard', SEED);
       const { inventory: updatedInv } = applyAdventureResult(buddy, inventory, result);
-      expect(updatedInv.coins).toBe(result.coinsEarned);
+      // Loot coins plus any achievement reward unlocked by the adventure (FEAT-P1-001).
+      expect(updatedInv.coins).toBeGreaterThanOrEqual(result.coinsEarned);
     });
 
     it('adds items to inventory', () => {
@@ -122,7 +123,8 @@ describe('Adventure System', () => {
       const { buddy: b1, inventory: i1 } = applyAdventureResult(buddy, inventory, r1);
       const r2 = runAdventure(b1, i1, 'park', SEED + 1);
       const { inventory: i2 } = applyAdventureResult(b1, i1, r2);
-      expect(i2.coins).toBe(r1.coinsEarned + r2.coinsEarned);
+      // Loot coins accumulate; achievement rewards may add on top (FEAT-P1-001).
+      expect(i2.coins).toBeGreaterThanOrEqual(r1.coinsEarned + r2.coinsEarned);
     });
   });
 });

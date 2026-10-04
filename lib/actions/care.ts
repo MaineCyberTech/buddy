@@ -1,4 +1,7 @@
-import { BuddyState, BuddyNeeds } from '@/lib/generation/types';
+import { BuddyState, BuddyNeeds, InventoryState, StatName } from '@/lib/generation/types';
+import { checkEvolution, updateSkills } from '@/lib/progression/lifecycle';
+import { grantAchievements } from '@/data/achievements';
+import { ITEM_MAP } from '@/data/items';
 
 export type CareActionType = 'feed' | 'play' | 'wash' | 'rest' | 'talk' | 'train' | 'heal';
 
@@ -9,6 +12,8 @@ export interface CareActionResult {
   xpGain: number;
   healthChange: number;
 }
+
+const EMPTY_INVENTORY: InventoryState = { coins: 0, items: [] };
 
 const ACTION_MESSAGES: Record<CareActionType, string[]> = {
   feed: ['Yum!', 'Delicious!', 'Nom nom nom!', 'Tasty!', 'Full belly!'],
@@ -24,8 +29,12 @@ function pickMessage(messages: string[]): string {
   return messages[Math.floor(Math.random() * messages.length)];
 }
 
-export function applyAction(buddy: BuddyState, action: CareActionType): { buddy: BuddyState; result: CareActionResult } {
-  const newBuddy = { ...buddy };
+export function applyAction(
+  buddy: BuddyState,
+  action: CareActionType,
+  inventory: InventoryState = EMPTY_INVENTORY
+): { buddy: BuddyState; inventory: InventoryState; result: CareActionResult } {
+  let newBuddy = { ...buddy };
   const newNeeds: BuddyNeeds = { ...buddy.needs };
   const now = Date.now();
 
@@ -121,8 +130,23 @@ export function applyAction(buddy: BuddyState, action: CareActionType): { buddy:
 
   newBuddy.mood = recalculateMood(newBuddy);
 
+  // Wire progression into the live action path (FEAT-P1-002). `train` and `talk`
+  // grow the matching skill; evolution is evaluated against lifetime XP.
+  const skillAction = action === 'train' ? 'train' : action === 'talk' ? 'talk' : null;
+  const skillStatValue =
+    action === 'train' ? newBuddy.stats.discipline : action === 'talk' ? newBuddy.stats.empathy : 0;
+  newBuddy = advanceProgression(newBuddy, skillAction, skillStatValue);
+
+  // Evaluate achievements after the transition and grant their rewards (FEAT-P1-001).
+  const granted = grantAchievements(
+    newBuddy,
+    inventory,
+    newBuddy.progression?.totalAdventures ?? 0
+  );
+
   return {
-    buddy: newBuddy,
+    buddy: granted.buddy,
+    inventory: granted.inventory,
     result: {
       message,
       moodChange,
@@ -130,6 +154,139 @@ export function applyAction(buddy: BuddyState, action: CareActionType): { buddy:
       xpGain,
       healthChange,
     },
+  };
+}
+
+/**
+ * Lifetime XP from the remainder XP field plus the XP already consumed by level-ups.
+ * `xp` is a remainder (see `applyAction`/`applyAdventureResult`), while lifecycle
+ * thresholds are expressed in total XP.
+ */
+function lifetimeXp(buddy: BuddyState): number {
+  let total = buddy.xp;
+  for (let level = 1; level < buddy.level; level++) {
+    total += levelUpXp(level);
+  }
+  return total;
+}
+
+/**
+ * Apply lifecycle evolution and skill growth after an XP-changing transition
+ * (FEAT-P1-002). Pure: returns a new buddy and never mutates the input.
+ */
+export function advanceProgression(
+  buddy: BuddyState,
+  skillAction: 'train' | 'talk' | 'exploring' | 'crafting' | 'cooking' | null,
+  skillStatValue = 0
+): BuddyState {
+  if (!buddy.progression) return buddy;
+
+  const progression = { ...buddy.progression };
+
+  const evolved = checkEvolution({ ...buddy, xp: lifetimeXp(buddy) });
+  if (evolved) {
+    progression.lifecycle = evolved;
+  }
+
+  if (skillAction) {
+    progression.skills = updateSkills(progression.skills, skillAction, skillStatValue);
+  }
+
+  return { ...buddy, progression };
+}
+
+export type ItemActionType = 'use' | 'sell' | 'equip';
+
+export interface ItemActionResult {
+  success: boolean;
+  message: string;
+  buddy: BuddyState;
+  inventory: InventoryState;
+}
+
+function consumeOne(inventory: InventoryState, itemId: string): InventoryState {
+  return {
+    coins: inventory.coins,
+    items: inventory.items
+      .map(i => (i.id === itemId ? { ...i, quantity: i.quantity - 1 } : i))
+      .filter(i => i.quantity > 0),
+  };
+}
+
+/**
+ * Use, sell, or equip an inventory item (FEAT-P2-001). Pure: returns new state and
+ * never mutates the inputs. Food/medicine/toy/skill_book are consumed on use, hats
+ * are equipped (not consumed), and anything with `sellValue > 0` can be sold.
+ */
+export function applyItemAction(
+  buddy: BuddyState,
+  inventory: InventoryState,
+  itemId: string,
+  action: ItemActionType
+): ItemActionResult {
+  const def = ITEM_MAP.get(itemId);
+  const owned = inventory.items.find(i => i.id === itemId);
+
+  if (!def || !owned || owned.quantity <= 0) {
+    return { success: false, message: 'You do not own that item.', buddy, inventory };
+  }
+
+  if (action === 'sell') {
+    if (def.sellValue <= 0) {
+      return { success: false, message: `${def.name} cannot be sold.`, buddy, inventory };
+    }
+    return {
+      success: true,
+      message: `Sold ${def.name} for ${def.sellValue} coins.`,
+      buddy,
+      inventory: { ...consumeOne(inventory, itemId), coins: inventory.coins + def.sellValue },
+    };
+  }
+
+  if (action === 'equip') {
+    if (def.category !== 'hat') {
+      return { success: false, message: `${def.name} cannot be equipped.`, buddy, inventory };
+    }
+    return {
+      success: true,
+      message: `Equipped ${def.name}.`,
+      buddy: { ...buddy, identity: { ...buddy.identity, hat: def.id } },
+      inventory,
+    };
+  }
+
+  const newBuddy: BuddyState = { ...buddy, needs: { ...buddy.needs } };
+
+  switch (def.category) {
+    case 'food':
+      newBuddy.needs.hunger = Math.min(100, newBuddy.needs.hunger + 25);
+      newBuddy.needs.happiness = Math.min(100, newBuddy.needs.happiness + 5);
+      break;
+    case 'medicine':
+      newBuddy.health = Math.min(100, newBuddy.health + 30);
+      break;
+    case 'toy':
+      newBuddy.needs.happiness = Math.min(100, newBuddy.needs.happiness + 20);
+      newBuddy.needs.energy = Math.max(0, newBuddy.needs.energy - 5);
+      break;
+    case 'skill_book': {
+      const stat = def.effect as StatName | undefined;
+      if (stat && stat in newBuddy.stats) {
+        newBuddy.stats = { ...newBuddy.stats, [stat]: Math.min(100, newBuddy.stats[stat] + 5) };
+      }
+      break;
+    }
+    default:
+      return { success: false, message: `${def.name} cannot be used.`, buddy, inventory };
+  }
+
+  newBuddy.mood = recalculateMood(newBuddy);
+
+  return {
+    success: true,
+    message: `Used ${def.name}.`,
+    buddy: newBuddy,
+    inventory: consumeOne(inventory, itemId),
   };
 }
 
