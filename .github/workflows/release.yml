@@ -85,7 +85,7 @@ jobs:
         run: tar -czf "buddy-${GITHUB_REF_NAME}.tar.gz" .next public package.json package-lock.json sbom.cdx.json CHANGELOG-RELEASE.md
 
       - name: Attest build provenance
-        uses: actions/attest-build-provenance@v1
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: "buddy-${{ github.ref_name }}.tar.gz"
 
