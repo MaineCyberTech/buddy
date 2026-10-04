@@ -17,9 +17,8 @@ the browser (IndexedDB) and the app works offline through a service worker.
   accepted/deferred-risk record are in
   [docs/README.md](docs/README.md).
 - **Known gaps:** achievements, lifecycle evolution, and skills are implemented
-  but not yet wired into the game loop; loaded/imported saves are not
-  runtime-validated; automated CI and release automation are tracked
-  separately. Do not treat the current build as progression-complete.
+  but not yet wired into the game loop; automated CI and release automation are
+  tracked separately. Do not treat the current build as progression-complete.
 
 ## Stack
 
@@ -90,8 +89,9 @@ docs/                Project documentation and reports
   `lib/generation/hash.ts`, `lib/generation/rng.ts`, and
   `lib/generation/engine.ts`, so the same seed always yields the same Buddy.
 - **Offline-first persistence.** Game saves are stored in IndexedDB
-  (`lib/storage/indexeddb.ts`); the PWA shell is cached by the service worker
-  (`public/sw.js`, `lib/offline/sw.ts`).
+  (`lib/storage/indexeddb.ts`) and migrated + runtime-validated on load and
+  import (`validateSave` in `lib/storage/schema.ts`); the PWA shell is cached by
+  the service worker (`public/sw.js`, `lib/offline/sw.ts`).
 - **State.** Gameplay state lives in a Zustand store (`lib/buddy/store.ts`);
   actions in `lib/actions/` apply the care loop, and `lib/locations/adventure.ts`
   applies adventure outcomes.
