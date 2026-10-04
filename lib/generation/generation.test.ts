@@ -44,6 +44,15 @@ describe('Deterministic Generation', () => {
   });
 
   describe('SeededRNG', () => {
+    it('createRNG derives string seeds through the shared hashString (HYG-P2-002)', () => {
+      const viaCreateRNG = createRNG('shared-seed');
+      const viaHash = new SeededRNG(hashString('shared-seed'));
+
+      for (let i = 0; i < 20; i++) {
+        expect(viaCreateRNG.next()).toBe(viaHash.next());
+      }
+    });
+
     it('produces consistent results with same seed', () => {
       const rng1 = new SeededRNG(12345);
       const rng2 = new SeededRNG(12345);

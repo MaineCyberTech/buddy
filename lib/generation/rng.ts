@@ -1,3 +1,5 @@
+import { hashString } from '@/lib/generation/hash';
+
 export class SeededRNG {
   private state: number;
 
@@ -49,14 +51,4 @@ export class SeededRNG {
 export function createRNG(seed: string | number): SeededRNG {
   const numericSeed = typeof seed === 'string' ? hashString(seed) : seed;
   return new SeededRNG(numericSeed);
-}
-
-function hashString(str: string): number {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
-  }
-  return Math.abs(hash);
 }
