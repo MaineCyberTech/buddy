@@ -2,6 +2,9 @@
   "name": "buddy",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -11,6 +14,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
+    "audit": "npm audit --omit=dev",
+    "sbom": "npm sbom --sbom-format cyclonedx --omit=dev",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
