@@ -46,3 +46,64 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  # Dependency-vulnerability, secret, and license gate (buddy-CI-001).
+  security:
+    name: audit / secret scan / license policy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Fail on high/critical advisories in the production dependency set.
+      # Known current failure: the nested next/node_modules/postcss copy tracked as
+      # buddy-DEP-002 will keep this red until that copy is upgraded.
+      - name: Audit production dependencies
+        run: npm audit --audit-level=high --omit=dev
+
+      # Pin the scanner by version and verify its checksum before running it.
+      - name: Secret scan (gitleaks)
+        run: |
+          version=8.30.1
+          curl -sSfL -o gitleaks.tar.gz \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${version}/gitleaks_${version}_linux_x64.tar.gz"
+          echo "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  gitleaks.tar.gz" | sha256sum -c -
+          tar -xzf gitleaks.tar.gz gitleaks
+          ./gitleaks detect --source . --redact --verbose
+
+      # Placeholder until a license policy exists (see buddy-SUPPLY-002). Replace with
+      # an allow/deny license check once the project chooses a license.
+      - name: License policy
+        run: |
+          echo "::notice title=License policy::No license policy is defined yet (buddy-SUPPLY-002)."
+          echo "Add an allow/deny license check here once the project chooses a license."
+
+  # Pull requests only: block a PR that introduces a high/critical advisory.
+  dependency-review:
+    name: dependency review
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Dependency review
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: high
