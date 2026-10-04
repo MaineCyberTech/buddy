@@ -1,0 +1,25 @@
+# PORT-P3-001: repository line-ending policy. Normalize text to LF in the
+# repository so a Windows checkout and a Linux CI checkout produce byte-identical
+# files, and so review diffs do not carry line-ending churn.
+* text=auto eol=lf
+
+# Binary assets: never normalize, never attempt a textual diff.
+*.png    binary
+*.jpg    binary
+*.jpeg   binary
+*.gif    binary
+*.ico    binary
+*.webp   binary
+*.avif   binary
+*.bmp    binary
+*.pdf    binary
+*.zip    binary
+*.woff   binary
+*.woff2  binary
+*.ttf    binary
+*.otf    binary
+*.eot    binary
+*.mp3    binary
+*.mp4    binary
+*.webm   binary
+*.wasm   binary
