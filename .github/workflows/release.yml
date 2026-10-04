@@ -23,6 +23,11 @@ jobs:
   build:
     name: build / test / package
     runs-on: ubuntu-latest
+    # Require approval from the `release` environment's required reviewers before
+    # this job (and therefore any publish step) runs (buddy-CI-002). The environment
+    # and its protection rules are configured in GitHub settings; see
+    # docs/release-process.md.
+    environment: release
     permissions:
       contents: read
     steps:

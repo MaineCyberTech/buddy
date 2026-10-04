@@ -66,6 +66,56 @@ the GitHub Release is published with the artifact, SBOM, and changelog.
   (`git push origin :refs/tags/<tag>`); do not retag the same version.
 - To fix a shipped release, cut a new patch tag from the corrected commit.
 
+## Release governance and protection (buddy-CI-002)
+
+The workflow above is only as trustworthy as the controls around it. Repository
+settings are not stored in git, so they cannot be reviewed from a clone or enforced
+by a pull request; this section records the required configuration so it can be
+applied and audited. The `environment: release` key is code (see
+`.github/workflows/release.yml`); everything else is a GitHub setting.
+
+### Release environment (required reviewers)
+
+The `release` job uses the `release` GitHub Environment. Configure it with:
+
+1. Settings -> Environments -> New environment -> name it `release`.
+2. Add the release owner(s) under **Required reviewers**.
+3. Under **Deployment branches and tags**, restrict to selected tags matching `v*`
+   so only release tags can target the environment.
+4. Do not store long-lived credentials on the environment; the workflow uses the
+   short-lived `GITHUB_TOKEN`/OIDC only.
+
+With required reviewers set, a `v*` tag push starts the run but the job waits for
+approval before the build/publish steps execute. A release cannot be published by a
+stolen write token alone.
+
+### Protected version tags
+
+Create a repository ruleset (Settings -> Rules -> Rulesets -> New tag ruleset) that
+targets tags matching `v*` and:
+
+- restricts tag **creation** to release maintainers;
+- blocks tag **deletion** and **force-push** (tags are immutable release anchors).
+
+### Protected `master` branch
+
+Create a branch ruleset (or classic branch protection) for `master` that:
+
+- requires a pull request before merging;
+- requires the `CI` status check to pass (`.github/workflows/ci.yml`);
+- requires review from the owner(s) in `.github/CODEOWNERS`;
+- disallows force pushes and branch deletion.
+
+`.github/CODEOWNERS` only *requests* review by default; automatic review and merge
+blocking require the "Require review from Code Owners" and "Require a pull request
+before merging" settings above.
+
+### Verifying the controls
+
+- Tag a throwaway commit from a non-maintainer account: the run must not publish
+  until a required reviewer approves.
+- Confirm `master` rejects a direct push and a pull request missing the `CI` check.
+
 ## Scope and relationship to the audit
 
 The `repo-deep-dive` audit of `20261003-0018` (commit `99abf29`) found no release
