@@ -56,7 +56,10 @@ describe('HatchFlow', () => {
       expect(useGameStore.getState().screen).toBe('main');
     });
     expect(useGameStore.getState().buddy?.identity.nickname).toBe('Pip');
-    expect(useGameStore.getState().guestId).toMatch(/^guest-/);
+    // SEC-P3-001: the guest id is now a crypto-random UUID (with a legacy
+    // `guest-...` fallback for non-secure contexts), so assert presence rather
+    // than the old `guest-` prefix.
+    expect(useGameStore.getState().guestId).toBeTruthy();
   });
 
   it('defaults the nickname to the species name when left blank', async () => {

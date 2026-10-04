@@ -14,7 +14,12 @@ export function HatchFlow() {
 
   const handleHatch = useCallback(() => {
     setStep('hatching');
-    const guestId = 'guest-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    // Use a cryptographically random id (SEC-P3-001). The fallback only runs in
+    // non-secure contexts where `crypto.randomUUID` is unavailable.
+    const guestId =
+      typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+        ? crypto.randomUUID()
+        : 'guest-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
     const buddy = createInitialBuddyState(guestId);
     setNewBuddy(buddy);
     useGameStore.getState().setGuestId(guestId);
