@@ -91,7 +91,8 @@
       "recommendation": "Upgrade to a Next.js line that bundles postcss >= 8.5.19 (or a validated override), or mark the audit step as an explicit, non-blocking risk-acceptance with a linked register entry so the workflow result is meaningful.",
       "deterministic_ref": null,
       "confidence": "",
-      "status": "open"
+      "note": "partially-fixed: draft PR #35 (remediation/buddy-CI-P1-001) adds a root npm overrides.postcss pin to ^8.5.28, so the copy under next is patched; the CI security gate is green on the PR. Verified-fixed only once merged to master.",
+      "status": "partially-fixed"
     },
     {
       "id": "ARCH-P2-001",
@@ -203,7 +204,8 @@
       "recommendation": "Upgrade Next.js to a line bundling postcss >= 8.5.19, or validate a root override; otherwise keep RA-001 current and re-check monthly and at expiry.",
       "deterministic_ref": null,
       "confidence": "",
-      "status": "open"
+      "note": "partially-fixed: root npm overrides.postcss pin to ^8.5.28 validated in draft PR #35; RA-001 closed in docs/RISK_ACCEPTANCE.md. Verified-fixed only once merged to master.",
+      "status": "partially-fixed"
     },
     {
       "id": "SC-P2-002",
