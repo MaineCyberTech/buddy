@@ -86,8 +86,9 @@ risk is closed. A finding moves to `verified-fixed` only with an artifact
 captured at the current commit.
 
 Supply-chain exceptions that carry an explicit expiry and CVE list are recorded
-separately in [`RISK_ACCEPTANCE.md`](RISK_ACCEPTANCE.md) (currently `RA-001`,
-the Next.js-vendored `postcss@8.4.31`).
+separately in [`RISK_ACCEPTANCE.md`](RISK_ACCEPTANCE.md). `RA-001` (the
+Next.js-vendored `postcss@8.4.31`) is now **closed** via a validated npm
+`overrides.postcss` pin to the patched 8.5.x line.
 
 ## Licensing
 
