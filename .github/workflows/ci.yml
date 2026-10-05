@@ -69,8 +69,9 @@ jobs:
         run: npm ci
 
       # Fail on high/critical advisories in the production dependency set.
-      # Known current failure: the nested next/node_modules/postcss copy tracked as
-      # buddy-DEP-002 will keep this red until that copy is upgraded.
+      # The Next.js-vendored postcss copy is pinned to the patched 8.5.x line via
+      # the root `overrides.postcss` entry (buddy-DEP-002 / CI-P1-001), so this
+      # gate is expected to stay green.
       - name: Audit production dependencies
         run: npm audit --audit-level=high --omit=dev
 

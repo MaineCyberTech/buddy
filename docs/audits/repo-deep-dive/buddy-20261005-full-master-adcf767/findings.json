@@ -49,6 +49,7 @@
       "recommendation": "Keep deferred while guest-only. Before any cloud/account mode, add a server-side validation boundary and re-audit. Re-confirm the dated acceptance in docs/README.md.",
       "deterministic_ref": null,
       "confidence": "",
+      "note": "owner-gated (acceptance): deferred while guest-only; dated acceptance retained in docs/README.md accepted/deferred table. Residual: no server trust boundary exists - a server-side validation boundary must be added before any account/cloud mode.",
       "status": "open"
     },
     {
@@ -63,6 +64,7 @@
       "recommendation": "Enable a master ruleset: require a PR, require the CI status check, require CODEOWNERS review, block force-push and deletion. Verify by attempting a direct push.",
       "deterministic_ref": null,
       "confidence": "",
+      "note": "owner-gated: requires a repository admin to enable a master ruleset (require PR + CI status check + CODEOWNERS review, block force-push/deletion); proposal recorded in docs/release-process.md (Protected master branch). Not applied without owner sign-off. Residual: master remains directly pushable and unprotected.",
       "status": "open"
     },
     {
@@ -77,6 +79,7 @@
       "recommendation": "Create the `release` environment with required reviewers and restrict it to v* tags, then verify a non-maintainer tag push waits for approval.",
       "deterministic_ref": null,
       "confidence": "",
+      "note": "owner-gated: create the `release` environment with required reviewers restricted to v* tags (docs/release-process.md - Release environment). Not applied without owner sign-off. Residual: release.yml build/publish has no approval gate while the environment is absent.",
       "status": "open"
     },
     {
@@ -91,7 +94,8 @@
       "recommendation": "Upgrade to a Next.js line that bundles postcss >= 8.5.19 (or a validated override), or mark the audit step as an explicit, non-blocking risk-acceptance with a linked register entry so the workflow result is meaningful.",
       "deterministic_ref": null,
       "confidence": "",
-      "status": "open"
+      "note": "partially-fixed: draft PR #35 (remediation/buddy-CI-P1-001) adds a root npm overrides.postcss pin to ^8.5.28, so the copy under next is patched; the CI security gate is green on the PR. Verified-fixed only once merged to master.",
+      "status": "partially-fixed"
     },
     {
       "id": "ARCH-P2-001",
@@ -203,7 +207,8 @@
       "recommendation": "Upgrade Next.js to a line bundling postcss >= 8.5.19, or validate a root override; otherwise keep RA-001 current and re-check monthly and at expiry.",
       "deterministic_ref": null,
       "confidence": "",
-      "status": "open"
+      "note": "partially-fixed: root npm overrides.postcss pin to ^8.5.28 validated in draft PR #35; RA-001 closed in docs/RISK_ACCEPTANCE.md. Verified-fixed only once merged to master.",
+      "status": "partially-fixed"
     },
     {
       "id": "SC-P2-002",
