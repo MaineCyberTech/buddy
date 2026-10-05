@@ -2,9 +2,9 @@
 
 | Finding | Severity | Title | Owner | Target | Status | Note |
 |---|---|---|---|---|---|---|
-| ARCH-P1-001 | P1 | Client is fully authoritative: no server trust boundary exists | @owner | ARCH | open | Keep deferred while guest-only. Before any cloud/account mode, add a server-side validation boundary and re-audit. Re-co |
-| BP-P1-001 | P1 | master is unprotected: no required PR, review, or status checks | @owner | BP | open | Enable a master ruleset: require a PR, require the CI status check, require CODEOWNERS review, block force-push and dele |
-| BP-P1-002 | P1 | The `release` environment required by release.yml does not exist | @owner | BP | open | Create the `release` environment with required reviewers and restrict it to v* tags, then verify a non-maintainer tag pu |
+| ARCH-P1-001 | P1 | Client is fully authoritative: no server trust boundary exists | @owner | ARCH | open | owner-gated (acceptance): deferred while guest-only; dated acceptance in docs/README.md. Residual: no server trust boundary - add one before any account/cloud mode. |
+| BP-P1-001 | P1 | master is unprotected: no required PR, review, or status checks | @owner | BP | open | owner-gated: enable a master ruleset (require PR + CI status check + CODEOWNERS review, block force-push/deletion). Proposal in docs/release-process.md. Residual: master remains directly pushable/unprotected. |
+| BP-P1-002 | P1 | The `release` environment required by release.yml does not exist | @owner | BP | open | owner-gated: create the `release` environment with required reviewers restricted to v* tags. Proposal in docs/release-process.md. Residual: release.yml has no approval gate while it is absent. |
 | CI-P1-001 | P1 | CI is failing on master at the audited commit | @owner | CI | partially-fixed | Draft PR #35 (remediation/buddy-CI-P1-001) adds a root npm overrides.postcss pin to ^8.5.28 so the copy under next is patched; CI security gate green on the PR. Verified-fixed only once merged to master. |
 | ARCH-P2-001 | P2 | Inventory item actions mutate the store but are never persisted | @owner | ARCH | open | Persist after applyItemAction (call saveGame with version 2, guestId, buddy, inventory, createdAt/updatedAt), exactly as |
 | CI-P2-001 | P2 | dependency-review job is skipped because the dependency graph / Dependabot is disabled | @owner | CI | open | Enable Dependency graph + Dependabot alerts/security updates in repository settings; verify the dependency-review job th |
