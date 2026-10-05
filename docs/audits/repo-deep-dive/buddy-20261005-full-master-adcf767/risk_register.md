@@ -1,0 +1,45 @@
+# Follow-up register
+
+| Finding | Severity | Title | Owner | Target | Status | Note |
+|---|---|---|---|---|---|---|
+| ARCH-P1-001 | P1 | Client is fully authoritative: no server trust boundary exists | @owner | ARCH | open | Keep deferred while guest-only. Before any cloud/account mode, add a server-side validation boundary and re-audit. Re-co |
+| BP-P1-001 | P1 | master is unprotected: no required PR, review, or status checks | @owner | BP | open | Enable a master ruleset: require a PR, require the CI status check, require CODEOWNERS review, block force-push and dele |
+| BP-P1-002 | P1 | The `release` environment required by release.yml does not exist | @owner | BP | open | Create the `release` environment with required reviewers and restrict it to v* tags, then verify a non-maintainer tag pu |
+| CI-P1-001 | P1 | CI is failing on master at the audited commit | @owner | CI | open | Upgrade to a Next.js line that bundles postcss >= 8.5.19 (or a validated override), or mark the audit step as an explici |
+| ARCH-P2-001 | P2 | Inventory item actions mutate the store but are never persisted | @owner | ARCH | open | Persist after applyItemAction (call saveGame with version 2, guestId, buddy, inventory, createdAt/updatedAt), exactly as |
+| CI-P2-001 | P2 | dependency-review job is skipped because the dependency graph / Dependabot is disabled | @owner | CI | open | Enable Dependency graph + Dependabot alerts/security updates in repository settings; verify the dependency-review job th |
+| DATA-P2-001 | P2 | Inventory item actions are not written to the save | @owner | DATA | open | Call saveGame after a successful applyItemAction, using the same pattern as MainDevice and AdventureScreen. |
+| DOC-P2-001 | P2 | README states the stack is Next.js 14 but the repo is Next.js 15.5.27 | @owner | DOC | open | Update the README stack table to the actual pinned major. |
+| DOC-P2-002 | P2 | README 'Known gaps' and testing sections contradict the current code/tests | @owner | DOC | open | Reconcile the README with the current code: mark achievements/evolution/skills wired, and update the testing section to  |
+| DR-P2-001 | P2 | No backup/restore drill and no committed evidence of one | @owner | DR | open | Add a restore drill to the release checklist: export a representative save, clear storage, import, and assert equality;  |
+| FILE-P2-001 | P2 | Save export uses btoa and can throw on non-Latin-1 content | @owner | FILE | open | Encode with TextEncoder + base64 (or encodeURIComponent/unescape) and decode symmetrically in importSave; add a test wit |
+| SC-P2-001 | P2 | High-severity postcss advisory remains in the production dependency tree (accepted) | @owner | SC | open | Upgrade Next.js to a line bundling postcss >= 8.5.19, or validate a root override; otherwise keep RA-001 current and re- |
+| SC-P2-002 | P2 | Repository secret-scanning and Dependabot security updates are disabled | @owner | SC | open | Enable Dependency graph, Dependabot alerts + security updates, and secret scanning with push protection in repository se |
+| SC-P2-003 | P2 | Vendored prompt pack authorship and licensing are unconfirmed | @owner | SC | open | Confirm author/holder and license, or remove the pack from the distribution; record the decision with an owner and date. |
+| SEC-P2-001 | P2 | CSP allows 'unsafe-inline' scripts and styles | @owner | SEC | open | Move to a nonce/hash-based script-src when Next.js supports it, or record the exception with an owner and revisit on the |
+| USE-P2-001 | P2 | Inventory actions are lost on reload (persistence gap visible to the player) | @owner | USE | open | Persist on every successful item action; optionally show the autosave status like MainDevice. |
+| UX-P2-001 | P2 | Pinch-zoom is disabled (viewport maximumScale=1, userScalable=false) | @owner | UX | open | Remove maximumScale/userScalable (or set userScalable true and allow zoom to at least 5x). |
+| ARCH-P3-001 | P3 | AdventureScreen mutates a state object in place instead of returning a new one | @owner | ARCH | open | Return the incremented progression from applyAdventureResult (or spread into a new buddy) rather than assigning to the r |
+| CHAIN-P3-001 | P3 | Exploit-chain surface is limited to save import; residual risk is client respawn | @owner | CHAIN | open | No action required while guest-only. Re-run this lens after any server/account introduction. |
+| CI-P3-001 | P3 | `next lint` is deprecated and will be removed in Next.js 16 | @owner | CI | open | Migrate to `eslint` CLI (or the codemod) before upgrading Next.js. |
+| DATA-P3-001 | P3 | applyAdventureResult mutates item objects shared with the input inventory | @owner | DATA | open | Map to new item objects before incrementing quantity. |
+| DET-P3-001 | P3 | [SEC] gitleaks not installed (secret scan skipped) | @owner | DET | open | remediation |
+| DOC-P3-001 | P3 | README quality-gate command omits the build step used by CI | @owner | DOC | open | Document the gate CI actually enforces (lint, typecheck, test, coverage, build). |
+| EVOL-P3-001 | P3 | No feature-flag or plugin boundary for content/feature evolution | @owner | EVOL | open | For future content velocity, add a typed content-loading seam and a minimal feature-flag config; not required for the cu |
+| HYGIENE-P3-001 | P3 | Vendored prompt pack dominates the repository tree | @owner | HYGIENE | open | Decide: keep under a submodule/archive with confirmed license, or move out of the product repo. |
+| HYGIENE-P3-002 | P3 | No .editorconfig; line/format policy is split across tools | @owner | HYGIENE | open | Add `.editorconfig` and, optionally, a pre-commit format check. |
+| INFRA-P3-001 | P3 | Documented release/CI controls drift from the live repository configuration | @owner | INFRA | open | Add an automated settings check (gh api) to CI or a runbook step, and reconcile the docs with actual settings. |
+| IR-P3-001 | P3 | No incident-response runbook or tabletop exercise recorded | @owner | IR | open | Add a short IR runbook (token compromise, bad release rollback, dependency emergency) and run one tabletop; store the re |
+| MOB-P3-001 | P3 | Manifest relies on SVG icons flagged maskable; no PNG/apple-touch fallback | @owner | MOB | open | Add PNG 192/512 and a maskable PNG (with safe zone), plus apple-touch-icon and manifest id. |
+| MOB-P3-002 | P3 | Service worker caches all runtime responses without a storage budget | @owner | MOB | open | Bound the cache and handle QuotaExceededError on cache.put. |
+| OBS-P3-001 | P3 | Client errors are only logged locally; no production error sink is wired | @owner | OBS | open | Attach a privacy-respecting reporter to `buddy:error` (no save contents), or explicitly accept 'no production telemetry' |
+| PERF-P3-001 | P3 | Install-prompt detection polls on a 1s interval | @owner | PERF | open | Replace polling with the `beforeinstallprompt` event (already listened for in lib/offline/sw.ts) and store the captured  |
+| PRIV-P3-001 | P3 | No in-app privacy notice or data-management surface | @owner | PRIV | open | Add a small settings/about surface with export, delete, and a short privacy notice. |
+| RES-P3-001 | P3 | Service worker caches every successful same-origin GET with no bound or eviction policy | @owner | RES | open | Restrict runtime caching to immutable hashed assets, bound the cache, and use stale-while-revalidate for navigations. |
+| RES-P3-002 | P3 | No automated backup of the browser-local save | @owner | RES | open | Provide a periodic export/backup affordance (or File System Access download) and document recovery steps. |
+| SBOM-P3-001 | P3 | No license policy and no committed SBOM artifact | @owner | SBOM | open | Define an allow/deny license policy and enforce it in CI; optionally commit the per-release SBOM (or link the artifact)  |
+| SC-P3-001 | P3 | gitleaks runs with the default ruleset; no reviewed allowlist file in-repo | @owner | SC | open | Add a reviewed `.gitleaks.toml` allowlist (or a documented false-positive registry) and use it both in CI and in determi |
+| SEC-P3-001 | P3 | Guest id falls back to Math.random in non-secure contexts | @owner | SEC | open | Keep as documented. Ensure fallback is never used as an auth/ownership token if a server is added later. |
+| TEST-P3-001 | P3 | Coverage scope excludes components/ and app/; no E2E or accessibility automation | @owner | TEST | open | Add component/app files to the coverage scope (or a second threshold), and either add E2E + axe checks or remove the unu |
+| USE-P3-001 | P3 | Selling an item has no confirmation step | @owner | USE | open | Add a confirm step for sell, or an undo window. |
+| UX-P3-001 | P3 | Install prompt and offline banner can overlay content | @owner | UX | open | Reserve space or make the indicators dismissible, and test on a 320px viewport. |
