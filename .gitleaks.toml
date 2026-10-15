@@ -1,0 +1,61 @@
+# ---------------------------------------------------------------------------
+# MCT org baseline gitleaks configuration.
+#
+# Derived from falcon's .gitleaks.toml, which is the most mature in the org.
+# This file is the shared baseline: copy it to <repo>/.gitleaks.toml.
+#
+# Doctrine (inherited from falcon, SEC-001):
+#   * the default ruleset stays ON
+#   * allowlists are narrow and line-scoped
+#   * never a broad subtree exemption
+#   * a new allowlist entry needs a comment saying why it is not a leak
+#
+# Adding to this file weakens it for every repo at once. Prefer a
+# repo-local override in the repo that needs it.
+# ---------------------------------------------------------------------------
+
+[extend]
+useDefault = true
+
+# --- 1. Documentation placeholders ----------------------------------------
+# Command examples legitimately contain REDACTED / REPLACE_WITH_* / documented
+# default credentials. Match the credential-shaped PAIR, not a whole line, so a
+# literal secret on the same line is still caught.
+[[allowlists]]
+description = "documented placeholder credentials in command examples (never literal secrets)"
+regexTarget = "match"
+regexes = [
+  '(?i)(?:admin|kibanaserver|user|vault|root|test):(?:admin|changeme|example|template|redacted|REPLACE_WITH_[A-Z_]+)\b',
+]
+
+# --- 2. Public key material ------------------------------------------------
+# CA certs, SSH public keys and WireGuard public keys are public by definition.
+[[allowlists]]
+description = "public key material (CA/SSH/wg public keys in docs), not credentials"
+regexTarget = "line"
+regexes = ['(?i)public[_ ]key[ :=]+[A-Za-z0-9+/=]{40,}']
+
+# --- 3. Well-known upstream demo credentials -------------------------------
+# The Supabase local-CLI demo JWT (iss: supabase-demo) ships in Supabase's own
+# docs and in every `supabase init` project. It is not a secret - but the repos
+# are still being cleaned up to use obvious placeholders (remediations/03).
+[[allowlists]]
+description = "Supabase local-CLI demo key (iss: supabase-demo) - public upstream default"
+regexTarget = "match"
+regexes = ['eyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_=]*c3VwYWJhc2UtZGVtby']
+
+# --- 4. Scanner fixtures ---------------------------------------------------
+# Test fixtures that deliberately contain token-shaped strings to prove a
+# scanner works. Must be scoped to the fixture path, never a whole directory.
+[[allowlists]]
+description = "deliberate scanner fixtures (path-scoped)"
+paths = ['(^|/)tests?/fixtures?/.*']
+
+# --- 5. Inbound audit reports ---------------------------------------------
+# Some repos commit generated audit reports. Do NOT allowlist the whole
+# directory: a report that quotes a real credential is a leak (that is exactly
+# the soc incident). Only the explicit redaction marker is allowlisted.
+[[allowlists]]
+description = "explicit redaction markers in committed reports"
+regexTarget = "match"
+regexes = ['<REDACTED:[^>]*>', 'REDACTED', '\*\*\*REDACTED\*\*\*']

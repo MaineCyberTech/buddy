@@ -23,3 +23,4 @@
 *.mp4    binary
 *.webm   binary
 *.wasm   binary
+*.sh text eol=lf
