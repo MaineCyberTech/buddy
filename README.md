@@ -11,24 +11,26 @@ the browser (IndexedDB) and the app works offline through a service worker.
 ## Status
 
 - **Release:** `0.1.0` release candidate - guest/local scope.
-- **Audit:** a `repo-deep-dive` audit of this release (run
-  `20261003-0018-master-99abf29`, commit `99abf29`) found **0 P0** and **11 P1**
-  findings and returned **GO WITH CONDITIONS**. The reconciled status and the
-  accepted/deferred-risk record are in
+- **Audit:** the latest full `repo-deep-dive` pass is
+  `buddy-20261108-verify-master-9e3b015` (master `9e3b015`), with 4 P1 / 11 P2 /
+  18 P3 findings. The 20261108 remediation pass addresses the CI/security set;
+  the reconciled status and accepted/deferred-risk record are in
   [docs/README.md](docs/README.md).
-- **Known gaps:** achievements, lifecycle evolution, and skills are implemented
-  but not yet wired into the game loop; automated CI and release automation are
-  tracked separately. Do not treat the current build as progression-complete.
+- **Progression:** achievements, lifecycle evolution, and skills are wired into
+  the care and adventure flows (`lib/actions/care.ts`,
+  `lib/locations/adventure.ts`). Remaining open audit items are not
+  progression-completeness gaps; see the documentation index for the current
+  list.
 
 ## Stack
 
 | Area | Choice |
 |---|---|
-| Framework | Next.js 14 (App Router) |
+| Framework | Next.js 15 (App Router; `next` pinned to the `^15.5.28` patch line) |
 | UI | React 18, Tailwind CSS |
 | State | Zustand |
 | Persistence | IndexedDB via `idb`; service worker + web manifest for offline/PWA |
-| Validation | Zod (types) |
+| Validation | Zod (runtime save validation) |
 | Language | TypeScript (`strict`) |
 | Tests | Vitest (with Testing Library + jsdom) |
 
@@ -53,14 +55,26 @@ Then open <http://localhost:3000>.
 | `npm run lint` | ESLint (`next lint`) |
 | `npm run typecheck` | Type check (`tsc --noEmit`) |
 | `npm run test` | Run the Vitest suite once |
+| `npm run test:coverage` | Run tests with the coverage thresholds |
 | `npm run test:watch` | Vitest watch mode |
+| `npm run audit:gate` | Block HIGH/CRITICAL production advisories except dated exceptions |
+| `npm run license:check` | Enforce the production dependency license allowlist |
+| `npm run secret:scan` | Run the pinned gitleaks scan locally |
 | `npm run format` | Prettier write |
 | `npm run format:check` | Prettier check |
 
-Before opening a PR, run the quality gate:
+Before opening a PR, run the quality gate (the CI workflow is the source of
+truth for the enforced checks):
 
 ```sh
-npm ci && npm run lint && npm run typecheck && npm run test
+npm ci
+npm run lint
+npm run typecheck
+npm run test
+npm run test:coverage
+npm run build
+npm run audit:gate
+npm run license:check
 ```
 
 ## Project layout
@@ -102,10 +116,15 @@ docs/                Project documentation and reports
 npm run test
 ```
 
-The unit suite covers the care loop, the adventure/loot engine, deterministic
-generation, lifecycle progression, and the item catalogue (see the `*.test.ts`
-files). Component/E2E coverage and persistence-layer tests are tracked gaps (see
-the audit register in [docs/README.md](docs/README.md)).
+The suite covers the care loop, the adventure/loot engine, deterministic
+generation, lifecycle progression, and the item catalogue. It also includes
+component tests under `app/` and `components/` (`app/page.test.tsx`,
+`app/error.test.tsx`, `components/**/*.test.tsx`) and persistence tests under
+`lib/storage/` (`indexeddb.test.ts`, `schema.test.ts`). `npm run test:coverage`
+enforces the line/statement/branch/function thresholds over `lib/` and `data/`;
+`app/` and `components/` are exercised but remain outside the measured coverage
+scope. E2E and accessibility automation are still tracked gaps (see the audit
+register in [docs/README.md](docs/README.md)).
 
 ## Documentation
 
@@ -117,6 +136,6 @@ the audit register in [docs/README.md](docs/README.md)).
 
 ## License
 
-No license has been chosen yet. Absent an explicit license grant, all rights are
-reserved by default (see the repository `LICENSE` and `NOTICE`, tracked
-separately, and the licensing note in [docs/README.md](docs/README.md)).
+`buddy` is proprietary and all rights are reserved; no open-source license has
+been granted. See the repository `LICENSE` and `NOTICE` and the licensing note
+in [docs/README.md](docs/README.md).

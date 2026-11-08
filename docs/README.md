@@ -46,6 +46,13 @@ and `data/` is authoritative.
 
 ## Audit reconciliation (FINAL-P2-001)
 
+> **Current run:** the latest full pass is
+> `buddy-20261108-verify-master-9e3b015` against master `9e3b015`
+> (4 P1 / 11 P2 / 18 P3). The matrix below is the historical reconciliation at
+> `99abf29`; it is retained for context and the rows that have since changed are
+> marked. The corresponding remediation pass addresses the G2 findings from
+> that run.
+
 The audited commit is `99abf29`, run `20261003-0018-master-99abf29`. Several
 phase completion reports self-report **"P0/P1/P2/P3 Issues: None"** (for example
 `buddy/reports/phases/phase-05-completion-report.md`), which contradicts the
@@ -55,13 +62,13 @@ records the delta so a reader does not over-trust the phase reports.
 | Area | Phase report claim | Audit finding at `99abf29` | Status |
 |---|---|---|---|
 | Test/build evidence | "109/109 tests pass", "Build succeeded" (manual, unbound) | Test count supported; no commit-bound artifact (`EXEC-P2-001`) | open - see CI/release work |
-| Achievements | Listed as remaining work, no P1 reported | `FEAT-P1-001` achievements implemented but unwired | open (tracked) |
-| Evolution/skills | Implemented, no P1 reported | `FEAT-P1-002` evolution/skills unwired | open (tracked) |
+| Achievements | Listed as remaining work, no P1 reported | `FEAT-P1-001` achievements implemented but unwired | verified-fixed @ `9e3b015` (`lib/actions/care.ts`, `lib/locations/adventure.ts` wire progression, skills, evolution, and achievements) |
+| Evolution/skills | Implemented, no P1 reported | `FEAT-P1-002` evolution/skills unwired | verified-fixed @ `9e3b015` (same care/adventure progression paths) |
 | Save version | Not reported | `DATA-P1-001` loadGame downgrades saves to v1 | verified-fixed @ `162a06d` (`SAVE_VERSION`/`MIGRATIONS` in `lib/storage/schema.ts`) |
 | Save validation | Not reported | `DATA-P1-002` / `SEC-P2-001` no runtime save validation | verified-fixed @ `162a06d` (`validateSave` in `lib/storage/schema.ts`, called by `loadGame`/`importSave` in `lib/storage/indexeddb.ts`; tests in `lib/storage/schema.test.ts`) |
 | Device/adventure state | Not reported | `ARCH-P1-002` adventure updates store but not device UI | open (tracked) |
-| CI / governance | Not reported | `CI-P1-001` / `CI-P1-002` no CI or required checks | open (tracked) |
-| License | Not reported | `SUPPLY-P1-001` no LICENSE (rights undefined) | open (tracked) |
+| CI / governance | Not reported | `CI-P1-001` / `CI-P1-002` no CI or required checks | CI and release workflows exist; required rulesets/environments remain open (`BP-P1-001`, `BP-P1-002`) |
+| License | Not reported | `SUPPLY-P1-001` no LICENSE (rights undefined) | verified-fixed: proprietary all-rights-reserved `LICENSE` and `NOTICE` |
 | Release binding | Not reported | `FINAL-P1-001` releases not bound to a commit | open (tracked) |
 
 Phase reports are historical artifacts and are left as written; this matrix is
@@ -78,7 +85,7 @@ ignored. It is reviewed per release.
 |---|---|---|---|---|---|
 | `ARCH-P1-001` client-authoritative, no server trust boundary | P1 | Deferred | maintainer | 2026-10-03 | Guest-only, local-first app with no server, accounts, or remote data. Must be revisited before any account/cloud mode. |
 | `FINAL-P1-001` releases not bound to a commit | P1 | Deferred | maintainer | 2026-10-03 | Release automation is tracked by the release-process work; the current `v0.1.0-rc1` is a pre-`master` RC, not a bound release. |
-| `SUPPLY-P1-001` no license chosen | P1 | Deferred | maintainer / legal | 2026-10-03 | License choice (open-source vs. proprietary) is a product/legal decision; absence of a grant means all rights reserved until decided. |
+| `SUPPLY-P1-001` target license not chosen | P1 | Deferred (current: proprietary) | maintainer / legal | 2026-10-03 | Open-source vs. proprietary remains a product/legal decision; the repository is explicitly all-rights-reserved under `LICENSE`/`NOTICE` until a different grant is chosen. |
 | `EXEC-P2-001` validation evidence manual / unbound | P2 | Accepted for RC | maintainer | 2026-10-03 | The RC is guest/local; commit-bound CI evidence arrives with the CI/release work. |
 
 Accepted/deferred is a deliberate, documented decision - not a claim that the
@@ -88,14 +95,17 @@ captured at the current commit.
 Supply-chain exceptions that carry an explicit expiry and CVE list are recorded
 separately in [`RISK_ACCEPTANCE.md`](RISK_ACCEPTANCE.md). `RA-001` (the
 Next.js-vendored `postcss@8.4.31`) is now **closed** via a validated npm
-`overrides.postcss` pin to the patched 8.5.x line.
+`overrides.postcss` pin to the patched 8.5.x line. `RA-002` records the
+hash-based CSP residual (inline style attributes) and `RA-003` records the
+time-boxed `zod@3.25.76` audit exception (expires 2026-12-15).
 
 ## Licensing
 
-The repository has no chosen license yet. Absent an explicit grant, all rights
-are reserved by default; the `LICENSE` file (tracked separately) records the
-pending, all-rights-reserved status. The target-license decision is an open
-question under finding `SUPPLY-P1-001`. See also the root `NOTICE`.
+The repository is proprietary and all rights are reserved; the `LICENSE` file
+records that status and `NOTICE` records the associated restrictions. No
+open-source license has been granted. The target-license decision remains a
+product/legal choice, but the current rights position is explicit. See also the
+root `NOTICE`.
 
-This classification and reconciliation are tracked under the audit run
-`20261003-0018-master-99abf29`.
+This classification originated with audit run `20261003-0018-master-99abf29`;
+the current full pass is `buddy-20261108-verify-master-9e3b015`.
