@@ -235,11 +235,20 @@ export function applyItemAction(
     if (def.sellValue <= 0) {
       return { success: false, message: `${def.name} cannot be sold.`, buddy, inventory };
     }
+
+    const remaining = consumeOne(inventory, itemId);
+    const soldLastCopy = !remaining.items.some(i => i.id === itemId);
+    // A sold hat must not stay visually equipped after its last copy is gone
+    // (USE-P2-002). Generated hats (`hat` not matching an item id) are untouched.
+    const soldEquippedHat = def.category === 'hat' && soldLastCopy && buddy.identity.hat === itemId;
+
     return {
       success: true,
       message: `Sold ${def.name} for ${def.sellValue} coins.`,
-      buddy,
-      inventory: { ...consumeOne(inventory, itemId), coins: inventory.coins + def.sellValue },
+      buddy: soldEquippedHat
+        ? { ...buddy, identity: { ...buddy.identity, hat: 'none' } }
+        : buddy,
+      inventory: { ...remaining, coins: inventory.coins + def.sellValue },
     };
   }
 

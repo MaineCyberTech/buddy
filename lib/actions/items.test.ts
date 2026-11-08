@@ -63,6 +63,37 @@ describe('Item actions (FEAT-P2-001)', () => {
     expect(result.inventory.items).toEqual([{ id: 'flower_crown', quantity: 1 }]);
   });
 
+  it('clears an equipped item hat when the last copy is sold', () => {
+    const { buddy, inventory } = createState([{ id: 'flower_crown', quantity: 1 }]);
+    const equipped = applyItemAction(buddy, inventory, 'flower_crown', 'equip');
+
+    const sold = applyItemAction(equipped.buddy, equipped.inventory, 'flower_crown', 'sell');
+
+    expect(sold.success).toBe(true);
+    expect(sold.buddy.identity.hat).toBe('none');
+    expect(sold.inventory.items).toHaveLength(0);
+  });
+
+  it('keeps the equipped hat while another copy remains', () => {
+    const { buddy, inventory } = createState([{ id: 'flower_crown', quantity: 2 }]);
+    const equipped = applyItemAction(buddy, inventory, 'flower_crown', 'equip');
+
+    const sold = applyItemAction(equipped.buddy, equipped.inventory, 'flower_crown', 'sell');
+
+    expect(sold.buddy.identity.hat).toBe('flower_crown');
+    expect(sold.inventory.items).toEqual([{ id: 'flower_crown', quantity: 1 }]);
+  });
+
+  it('does not clear a generated hat when selling an unrelated hat', () => {
+    const buddy = createInitialBuddyState('item-hat-test', 'Test');
+    buddy.identity.hat = 'crown';
+    const inventory: InventoryState = { coins: 0, items: [{ id: 'tiny_glasses', quantity: 1 }] };
+
+    const sold = applyItemAction(buddy, inventory, 'tiny_glasses', 'sell');
+
+    expect(sold.buddy.identity.hat).toBe('crown');
+  });
+
   it('rejects actions on items the player does not own', () => {
     const { buddy, inventory } = createState([]);
     const result = applyItemAction(buddy, inventory, 'apple', 'use');

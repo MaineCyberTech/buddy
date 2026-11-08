@@ -1,8 +1,9 @@
-import type { Metadata, Viewport } from 'next';
+import type { Metadata } from 'next';
 import { IBM_Plex_Sans, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import { ServiceWorkerRegistration } from '@/components/ui/ServiceWorkerRegistration';
 import { OfflineIndicator } from '@/components/ui/OfflineIndicator';
+import { appViewport } from './viewport';
 
 /**
  * Fonts are self-hosted at build time via next/font instead of loading from
@@ -38,14 +39,7 @@ export const metadata: Metadata = {
   },
 };
 
-export const viewport: Viewport = {
-  themeColor: '#1a1a2e',
-  width: 'device-width',
-  initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
-  viewportFit: 'cover',
-};
+export const viewport = appViewport;
 
 export default function RootLayout({
   children,

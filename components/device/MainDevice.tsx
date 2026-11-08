@@ -4,16 +4,18 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { BuddyState } from '@/lib/generation/types';
 import { useGameStore } from '@/lib/buddy/store';
 import { applyAction, applyOfflineDecay, CareActionType } from '@/lib/actions/care';
-import { saveGame } from '@/lib/storage/indexeddb';
+import { persistGame } from '@/lib/storage/persist';
 import { LcdDisplay } from '@/components/device/LcdDisplay';
 import { StatBars, NeedBars } from '@/components/ui/StatBars';
 import { AdventureScreen } from '@/components/device/AdventureScreen';
 import { InventoryScreen } from '@/components/device/InventoryScreen';
+import { SaveDataControls } from '@/components/ui/SaveDataControls';
 import { getStageName } from '@/lib/progression/lifecycle';
+import { ITEM_MAP } from '@/data/items';
 
 interface MainDeviceProps {
   buddy: BuddyState;
-  initialTab?: 'main' | 'profile' | 'stats' | 'adventure' | 'inventory';
+  initialTab?: 'main' | 'profile' | 'stats' | 'adventure' | 'inventory' | 'data';
 }
 
 const ACTIONS: { type: CareActionType; label: string; icon: string }[] = [
@@ -34,7 +36,7 @@ export function MainDevice({ buddy: initialBuddy, initialTab = 'main' }: MainDev
   const setBuddy = useGameStore((s) => s.setBuddy);
   const updateBuddy = useGameStore((s) => s.updateBuddy);
   const currentBuddy = storedBuddy ?? initialBuddy;
-  const [tab, setTab] = useState<'main' | 'profile' | 'stats' | 'adventure' | 'inventory'>(initialTab);
+  const [tab, setTab] = useState<'main' | 'profile' | 'stats' | 'adventure' | 'inventory' | 'data'>(initialTab);
   const [message, setMessage] = useState('');
   const [messageKey, setMessageKey] = useState(0);
   const [autoSaveStatus, setAutoSaveStatus] = useState('');
@@ -71,12 +73,9 @@ export function MainDevice({ buddy: initialBuddy, initialTab = 'main' }: MainDev
       setMessageKey((k) => k + 1);
 
       try {
-        await saveGame({
-          version: 2,
+        await persistGame({
           guestId: useGameStore.getState().guestId,
           buddy: updated,
-          createdAt: updated.identity.generatedAt,
-          updatedAt: Date.now(),
           inventory: updatedInventory,
         });
         setAutoSaveStatus('saved');
@@ -96,6 +95,12 @@ export function MainDevice({ buddy: initialBuddy, initialTab = 'main' }: MainDev
     sad: 'lcd-text-warn',
     sick: 'lcd-text-danger',
   };
+
+  const equippedHatItem = ITEM_MAP.get(currentBuddy.identity.hat);
+  const hatLabel =
+    currentBuddy.identity.hat === 'none'
+      ? 'none'
+      : equippedHatItem?.name ?? currentBuddy.identity.hat;
 
   return (
     <div className="min-h-screen flex flex-col bg-[#0a0a0f]">
@@ -158,33 +163,39 @@ export function MainDevice({ buddy: initialBuddy, initialTab = 'main' }: MainDev
         <div className="flex justify-center gap-2 border-t border-[#1a1a2e] pt-3 mt-2 flex-wrap">
           <button
             onClick={() => setTab('main')}
-            className={`text-xs font-lcd focus-ring px-2 py-1 rounded ${tab === 'main' ? 'lcd-text-accent border-b border-lcd-accent' : 'lcd-text opacity-50'}`}
+            className={`text-xs font-lcd focus-ring px-2 py-2 min-h-11 rounded ${tab === 'main' ? 'lcd-text-accent border-b border-lcd-accent' : 'lcd-text opacity-50'}`}
           >
             DEVICE
           </button>
           <button
             onClick={() => setTab('profile')}
-            className={`text-xs font-lcd focus-ring px-2 py-1 rounded ${tab === 'profile' ? 'lcd-text-accent border-b border-lcd-accent' : 'lcd-text opacity-50'}`}
+            className={`text-xs font-lcd focus-ring px-2 py-2 min-h-11 rounded ${tab === 'profile' ? 'lcd-text-accent border-b border-lcd-accent' : 'lcd-text opacity-50'}`}
           >
             PROFILE
           </button>
           <button
             onClick={() => setTab('stats')}
-            className={`text-xs font-lcd focus-ring px-2 py-1 rounded ${tab === 'stats' ? 'lcd-text-accent border-b border-lcd-accent' : 'lcd-text opacity-50'}`}
+            className={`text-xs font-lcd focus-ring px-2 py-2 min-h-11 rounded ${tab === 'stats' ? 'lcd-text-accent border-b border-lcd-accent' : 'lcd-text opacity-50'}`}
           >
             STATS
           </button>
           <button
             onClick={() => setTab('adventure')}
-            className={`text-xs font-lcd focus-ring px-2 py-1 rounded ${tab === 'adventure' ? 'lcd-text-accent border-b border-lcd-accent' : 'lcd-text opacity-50'}`}
+            className={`text-xs font-lcd focus-ring px-2 py-2 min-h-11 rounded ${tab === 'adventure' ? 'lcd-text-accent border-b border-lcd-accent' : 'lcd-text opacity-50'}`}
           >
             EXPLORE
           </button>
           <button
             onClick={() => setTab('inventory')}
-            className={`text-xs font-lcd focus-ring px-2 py-1 rounded ${tab === 'inventory' ? 'lcd-text-accent border-b border-lcd-accent' : 'lcd-text opacity-50'}`}
+            className={`text-xs font-lcd focus-ring px-2 py-2 min-h-11 rounded ${tab === 'inventory' ? 'lcd-text-accent border-b border-lcd-accent' : 'lcd-text opacity-50'}`}
           >
             ITEMS
+          </button>
+          <button
+            onClick={() => setTab('data')}
+            className={`text-xs font-lcd focus-ring px-2 py-2 min-h-11 rounded ${tab === 'data' ? 'lcd-text-accent border-b border-lcd-accent' : 'lcd-text opacity-50'}`}
+          >
+            DATA
           </button>
         </div>
 
@@ -213,8 +224,8 @@ export function MainDevice({ buddy: initialBuddy, initialTab = 'main' }: MainDev
             <p className="lcd-text text-xs opacity-50 italic">
               "{currentBuddy.personality.description}"
             </p>
-            <p className="lcd-text text-xs mt-2">
-              Hat: {currentBuddy.identity.hat}
+            <p className="lcd-text text-xs mt-2 break-words">
+              Hat: {hatLabel}
             </p>
           </div>
         )}
@@ -232,6 +243,10 @@ export function MainDevice({ buddy: initialBuddy, initialTab = 'main' }: MainDev
 
         {tab === 'inventory' && (
           <InventoryScreen onBack={() => setTab('main')} />
+        )}
+
+        {tab === 'data' && (
+          <SaveDataControls onImported={() => window.location.reload()} />
         )}
       </div>
     </div>
