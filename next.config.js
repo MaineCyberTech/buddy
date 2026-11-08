@@ -23,12 +23,25 @@ const buildId = resolveBuildId();
 const isDev = process.env.NODE_ENV !== 'production';
 
 // Fonts are self-hosted via next/font, so the policy can stay same-origin
-// (SEC-P2-002, API-P2-002). 'unsafe-inline' is required by Next.js for the
-// inlined runtime bootstrap; 'unsafe-eval' is only allowed during development.
+// (SEC-P2-002, API-P2-002).
+//
+// Next.js emits inline Flight/bootstrap scripts in its prerendered HTML. The
+// `unsafe-inline` tokens below are placeholders for the build step in
+// `scripts/finalize-csp.mjs`, which hashes every inline script/style in
+// `.next/server/app/*.html` and rewrites the generated routes manifest to a
+// hash-based policy. The official `npm run build` always runs it. In
+// development the source policy is used directly (and `unsafe-eval` is
+// required by the dev overlay).
+//
+// Style attributes are still allowed because React renders a few dynamic
+// widths/text-shadows as `style={{...}}`; `style-src-attr 'unsafe-inline'`
+// keeps that residual explicit while `style-src` itself becomes hash-based.
 const contentSecurityPolicy = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''}`,
+  "script-src-attr 'none'",
   "style-src 'self' 'unsafe-inline'",
+  "style-src-attr 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self' data:",
   `connect-src 'self'${isDev ? ' ws:' : ''}`,

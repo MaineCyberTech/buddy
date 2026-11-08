@@ -19,8 +19,10 @@ Publishing a tag triggers `.github/workflows/release.yml`, which, at the tagged
 commit:
 
 1. installs dependencies (`npm ci`);
-2. runs the full quality gate: `npm run lint`, `npm run typecheck`, `npm run test`,
-   `npm run build`;
+2. runs the full quality gate (`npm run lint`, `npm run typecheck`, `npm run test`,
+   `npm run build`) and the shared security gates (`npm run audit:gate`,
+   `bash scripts/run-gitleaks.sh`, `npm run license:check`) before anything is
+   packaged;
 3. records the **build id** — the full commit SHA (`git rev-parse HEAD`) — plus the
    tag name;
 4. generates an **SBOM** (`npm sbom --sbom-format cyclonedx`, Software Bill of

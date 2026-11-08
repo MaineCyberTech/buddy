@@ -68,29 +68,19 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Fail on high/critical advisories in the production dependency set.
-      # The Next.js-vendored postcss copy is pinned to the patched 8.5.x line via
-      # the root `overrides.postcss` entry (buddy-DEP-002 / CI-P1-001), so this
-      # gate is expected to stay green.
+      # Each gate runs even if an earlier one fails, so a red audit can no
+      # longer suppress the secret scan or the license policy (CI-P2-003). The
+      # job still fails if any gate fails.
       - name: Audit production dependencies
-        run: npm audit --audit-level=high --omit=dev
+        run: npm run audit:gate
 
-      # Pin the scanner by version and verify its checksum before running it.
       - name: Secret scan (gitleaks)
-        run: |
-          version=8.30.1
-          curl -sSfL -o gitleaks.tar.gz \
-            "https://github.com/gitleaks/gitleaks/releases/download/v${version}/gitleaks_${version}_linux_x64.tar.gz"
-          echo "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  gitleaks.tar.gz" | sha256sum -c -
-          tar -xzf gitleaks.tar.gz gitleaks
-          ./gitleaks detect --source . --redact --verbose
+        if: always()
+        run: bash scripts/run-gitleaks.sh
 
-      # Placeholder until a license policy exists (see buddy-SUPPLY-002). Replace with
-      # an allow/deny license check once the project chooses a license.
       - name: License policy
-        run: |
-          echo "::notice title=License policy::No license policy is defined yet (buddy-SUPPLY-002)."
-          echo "Add an allow/deny license check here once the project chooses a license."
+        if: always()
+        run: npm run license:check
 
   # Pull requests only: block a PR that introduces a high/critical advisory.
   # Requires the repository Dependency graph to be enabled (Settings -> Security ->

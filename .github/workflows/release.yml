@@ -45,6 +45,17 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Same gates as CI, using the shared scripts so release and CI cannot
+      # drift. Nothing is packaged or published until these pass (CI-P2-002).
+      - name: Audit production dependencies
+        run: npm run audit:gate
+
+      - name: Secret scan (gitleaks)
+        run: bash scripts/run-gitleaks.sh
+
+      - name: License policy
+        run: npm run license:check
+
       - name: Lint
         run: npm run lint
 
