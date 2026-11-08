@@ -126,5 +126,74 @@ describe('Adventure System', () => {
       // Loot coins accumulate; achievement rewards may add on top (FEAT-P1-001).
       expect(i2.coins).toBeGreaterThanOrEqual(r1.coinsEarned + r2.coinsEarned);
     });
+
+    it('increments totalAdventures in the pure transition without mutating the input', () => {
+      const { buddy, inventory } = createTestState();
+      const before = buddy.progression.totalAdventures;
+      const result = {
+        success: true,
+        locationId: 'backyard',
+        message: 'ok',
+        coinsEarned: 0,
+        itemsReceived: [],
+        xpGained: 0,
+        bondChange: 1,
+        statChanges: {},
+        energyCost: 5,
+        encounterText: '',
+      };
+
+      const { buddy: updated } = applyAdventureResult(buddy, inventory, result);
+
+      expect(updated.progression.totalAdventures).toBe(before + 1);
+      expect(buddy.progression.totalAdventures).toBe(before);
+    });
+
+    it('copies inventory stacks before merging loot (DATA-P3-001)', () => {
+      const { buddy } = createTestState();
+      const inventory: InventoryState = { coins: 10, items: [{ id: 'apple', quantity: 1 }] };
+      const result = {
+        success: true,
+        locationId: 'backyard',
+        message: 'ok',
+        coinsEarned: 3,
+        itemsReceived: [{ id: 'apple', quantity: 2 }],
+        xpGained: 0,
+        bondChange: 1,
+        statChanges: {},
+        energyCost: 5,
+        encounterText: '',
+      };
+
+      const { inventory: updated } = applyAdventureResult(buddy, inventory, result);
+
+      expect(updated.items.find(i => i.id === 'apple')?.quantity).toBe(3);
+      expect(inventory.items[0].quantity).toBe(1);
+      expect(updated.items[0]).not.toBe(inventory.items[0]);
+    });
+
+    it('recalculates mood after an adventure drops needs (USE-P3-002)', () => {
+      const { buddy, inventory } = createTestState();
+      buddy.mood = 'happy';
+      buddy.needs.hunger = 21;
+      buddy.needs.happiness = 21;
+      const result = {
+        success: true,
+        locationId: 'backyard',
+        message: 'ok',
+        coinsEarned: 0,
+        itemsReceived: [],
+        xpGained: 0,
+        bondChange: 0,
+        statChanges: {},
+        energyCost: 0,
+        encounterText: '',
+      };
+
+      const { buddy: updated } = applyAdventureResult(buddy, inventory, result);
+
+      expect(updated.mood).toBe('neutral');
+      expect(buddy.mood).toBe('happy');
+    });
   });
 });

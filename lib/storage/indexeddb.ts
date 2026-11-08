@@ -79,11 +79,40 @@ export async function deleteSave(): Promise<void> {
   }
 }
 
+const BASE64_CHUNK_SIZE = 0x8000;
+
+/**
+ * Encode JSON as UTF-8 bytes before base64. `btoa` only accepts Latin-1 code
+ * units, so a nickname/item containing CJK or emoji would otherwise throw
+ * InvalidCharacterError (FILE-P2-001).
+ */
+export function encodeSavePayload(json: string): string {
+  const bytes = new TextEncoder().encode(json);
+  let binary = '';
+  for (let offset = 0; offset < bytes.length; offset += BASE64_CHUNK_SIZE) {
+    const chunk = bytes.subarray(offset, offset + BASE64_CHUNK_SIZE);
+    let part = '';
+    for (let i = 0; i < chunk.length; i++) {
+      part += String.fromCharCode(chunk[i]);
+    }
+    binary += part;
+  }
+  return btoa(binary);
+}
+
+export function decodeSavePayload(encoded: string): string {
+  const binary = atob(encoded);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+}
+
 export async function exportSave(): Promise<string> {
   const save = await loadGame();
   if (!save) throw new Error('No save to export');
-  const json = JSON.stringify(save);
-  return btoa(json);
+  return encodeSavePayload(JSON.stringify(save));
 }
 
 export async function importSave(encoded: string): Promise<boolean> {
@@ -91,7 +120,7 @@ export async function importSave(encoded: string): Promise<boolean> {
     if (typeof encoded !== 'string' || encoded.length === 0 || encoded.length > MAX_IMPORT_LENGTH) {
       throw new Error('Save payload size invalid');
     }
-    const json = atob(encoded);
+    const json = decodeSavePayload(encoded.trim());
     const raw = JSON.parse(json) as unknown;
     const result = validateSave(raw);
     if (!result.ok) {

@@ -6,7 +6,7 @@ import {
 } from '@/lib/generation/types';
 import { LOCATION_MAP } from '@/data/locations';
 import { LOOT_TABLE_MAP } from '@/data/loot-tables';
-import { advanceProgression } from '@/lib/actions/care';
+import { advanceProgression, recalculateMood } from '@/lib/actions/care';
 import { grantAchievements } from '@/data/achievements';
 
 function rollLoot(rng: SeededRNG, lootTableId: string): { coins: number; items: { id: string; quantity: number }[]; xpGain: number } {
@@ -138,6 +138,7 @@ export function applyAdventureResult(
   newBuddy.xp += result.xpGained;
   newBuddy.bond = Math.min(100, newBuddy.bond + result.bondChange);
   newBuddy.lastInteraction = Date.now();
+  newBuddy.mood = recalculateMood(newBuddy);
 
   let newLevel = newBuddy.level;
   let remainingXp = newBuddy.xp;
@@ -150,7 +151,9 @@ export function applyAdventureResult(
   // thresholds are evaluated against lifetime XP.
   newBuddy.xp = remainingXp;
 
-  const newItems = [...newInventory.items];
+  // Copy each stack before merging loot so the caller's inventory (and any save
+  // snapshot sharing those objects) is never mutated (DATA-P3-001).
+  const newItems = newInventory.items.map(i => ({ ...i }));
   for (const item of result.itemsReceived) {
     const existing = newItems.find(i => i.id === item.id);
     if (existing) {
@@ -166,14 +169,17 @@ export function applyAdventureResult(
   };
 
   // Adventures change XP, so wire evolution + the `exploring` skill (FEAT-P1-002),
-  // then evaluate achievements. `AdventureScreen` increments `totalAdventures` after
-  // this returns, so evaluate against the post-adventure count (FEAT-P1-001).
+  // then increment the adventure counter in this pure transition and evaluate
+  // achievements against the post-adventure count (FEAT-P1-001 / ARCH-P3-001).
   const progressed = advanceProgression(newBuddy, 'exploring', newBuddy.stats.courage);
-  const granted = grantAchievements(
-    progressed,
-    lootedInventory,
-    (progressed.progression?.totalAdventures ?? 0) + 1
-  );
+  const totalAdventures = (progressed.progression?.totalAdventures ?? 0) + 1;
+  const withAdventureCount = progressed.progression
+    ? {
+        ...progressed,
+        progression: { ...progressed.progression, totalAdventures },
+      }
+    : progressed;
+  const granted = grantAchievements(withAdventureCount, lootedInventory, totalAdventures);
 
   return {
     buddy: granted.buddy,

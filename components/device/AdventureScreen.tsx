@@ -5,7 +5,7 @@ import { useGameStore } from '@/lib/buddy/store';
 import { runAdventure, applyAdventureResult } from '@/lib/locations/adventure';
 import { LOCATIONS } from '@/data/locations';
 import { LocationDefinition, AdventureResult } from '@/lib/generation/types';
-import { saveGame } from '@/lib/storage/indexeddb';
+import { persistGame } from '@/lib/storage/persist';
 
 interface AdventureScreenProps {
   onBack: () => void;
@@ -34,12 +34,9 @@ export function AdventureScreen({ onBack }: AdventureScreenProps) {
 
     await new Promise(r => setTimeout(r, 1500));
 
+    // `applyAdventureResult` is pure and owns the adventure counter increment
+    // (ARCH-P3-001); the screen only commits its result.
     const { buddy: updatedBuddy, inventory: updatedInv } = applyAdventureResult(buddy, inventory, adventureResult);
-
-    const newProgression = updatedBuddy.progression
-      ? { ...updatedBuddy.progression, totalAdventures: updatedBuddy.progression.totalAdventures + 1 }
-      : undefined;
-    if (newProgression) updatedBuddy.progression = newProgression;
 
     setBuddy(updatedBuddy);
     setInventory(updatedInv);
@@ -48,14 +45,7 @@ export function AdventureScreen({ onBack }: AdventureScreenProps) {
     setLoading(false);
 
     try {
-      await saveGame({
-        version: 2,
-        guestId,
-        buddy: updatedBuddy,
-        inventory: updatedInv,
-        createdAt: updatedBuddy.identity.generatedAt,
-        updatedAt: Date.now(),
-      });
+      await persistGame({ guestId, buddy: updatedBuddy, inventory: updatedInv });
     } catch (err) {
       console.error('Save after adventure failed:', err);
     }

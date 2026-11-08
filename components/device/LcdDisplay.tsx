@@ -2,6 +2,7 @@
 
 import { BuddyState } from '@/lib/generation/types';
 import { SPECIES_MAP } from '@/data/species';
+import { resolveHatStyle } from '@/data/hats';
 
 interface LcdDisplayProps {
   buddy: BuddyState;
@@ -13,7 +14,11 @@ export function LcdDisplay({ buddy, animate = true, className = '' }: LcdDisplay
   const species = SPECIES_MAP.get(buddy.identity.speciesId);
   const baseSprite = species?.asciiBase || ['(o o)', ' | |', ' / \\'];
 
-  const displayLines = composeSprite(baseSprite, buddy.identity.eyes, buddy.identity.hat);
+  const displayLines = composeSprite(
+    baseSprite,
+    buddy.identity.eyes,
+    resolveHatStyle(buddy.identity.hat)
+  );
 
   return (
     <div
@@ -24,7 +29,7 @@ export function LcdDisplay({ buddy, animate = true, className = '' }: LcdDisplay
       <div className="scanlines absolute inset-0 pointer-events-none" />
       <div className="relative z-10 flex flex-col items-center">
         <pre
-          className={`font-lcd text-lg leading-tight whitespace-pre text-center lcd-text ${animate ? 'animate-fade-in' : ''}`}
+          className={`font-lcd text-base sm:text-lg leading-tight whitespace-pre text-center lcd-text max-w-full overflow-x-auto ${animate ? 'animate-fade-in' : ''}`}
           style={{ textShadow: '0 0 4px rgba(0,255,136,0.3)' }}
         >
           {displayLines.join('\n')}
@@ -75,6 +80,7 @@ function composeSprite(base: string[], eyes: string, hat: string): string[] {
       hood: ['  ___  ', ' /...\\ ', ' |___| '],
       'hoodie up': ['  ___  ', ' /...\\ ', ' |___| '],
       antlers: ['  / \\  ', ' /   \\ '],
+      glasses: ['  (o o)  ', '   ---   '],
     };
 
     const decoration = hatDecorations[hat];

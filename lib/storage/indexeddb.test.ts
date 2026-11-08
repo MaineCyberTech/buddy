@@ -119,6 +119,30 @@ describe('Export / import', () => {
     expect((await loadGame())!.guestId).toBe('rt-1');
   });
 
+  it('round-trips non-Latin-1 save content through the UTF-8 codec', async () => {
+    // FILE-P2-001: btoa(JSON) throws for CJK/emoji; the export payload must be
+    // UTF-8 encoded first and restored byte-for-byte on import.
+    const nickname = '日本語のバディ 🌸';
+    const save = makeSave({ guestId: 'unicode-1', version: SAVE_VERSION });
+    save.buddy = {
+      ...save.buddy!,
+      identity: { ...save.buddy!.identity, nickname },
+    };
+    save.inventory = {
+      coins: 42,
+      items: [{ id: 'flower_crown', quantity: 1 }],
+    };
+    await saveGame(save);
+
+    const encoded = await exportSave();
+    await deleteSave();
+
+    expect(await importSave(encoded)).toBe(true);
+    const loaded = await loadGame();
+    expect(loaded!.buddy?.identity.nickname).toBe(nickname);
+    expect(loaded!.inventory).toEqual({ coins: 42, items: [{ id: 'flower_crown', quantity: 1 }] });
+  });
+
   it('rejects a payload that is not valid base64/json', async () => {
     expect(await importSave('%%%not-base64%%%')).toBe(false);
   });

@@ -83,6 +83,21 @@ describe('MainDevice', () => {
     expect(screen.getByText('Bud')).toBeTruthy();
     expect(screen.getByText(`the ${buddy.identity.speciesName}`)).toBeTruthy();
   });
+
+  it('shows the friendly name of an equipped catalogue hat', () => {
+    const base = makeBuddy();
+    const buddy = {
+      ...base,
+      identity: { ...base.identity, hat: 'flower_crown' },
+    };
+    useGameStore.setState({ buddy });
+    render(<MainDevice buddy={buddy} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'PROFILE' }));
+
+    expect(screen.getByText('Hat: Flower Crown')).toBeTruthy();
+    expect(screen.getByRole('img').textContent).toContain('@');
+  });
 });
 
 // ARCH-P1-002: the device must render the store's buddy (single source of truth),

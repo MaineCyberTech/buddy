@@ -18,18 +18,36 @@ function resolveCacheName() {
 
 var CACHE_NAME = resolveCacheName();
 var ASSETS_TO_CACHE = ['/', '/manifest.json', '/icon-192.svg', '/icon-512.svg'];
+var RUNTIME_CACHE_LIMIT = 50;
+
+/** Keep runtime caching bounded so a long session cannot exhaust storage. */
+function trimCache(cache) {
+  return cache.keys().then(function (requests) {
+    if (requests.length <= RUNTIME_CACHE_LIMIT) return;
+    var excess = requests.slice(0, requests.length - RUNTIME_CACHE_LIMIT);
+    return Promise.all(
+      excess.map(function (request) {
+        return cache.delete(request);
+      })
+    );
+  });
+}
 
 self.addEventListener('install', function (event) {
+  // Do not skipWaiting here: an update must stay in `waiting` until the player
+  // accepts the in-app prompt (MOB-P2-001). A first install still activates
+  // normally because there is no older worker to replace.
   event.waitUntil(
-    caches
-      .open(CACHE_NAME)
-      .then(function (cache) {
-        return cache.addAll(ASSETS_TO_CACHE);
-      })
-      .then(function () {
-        return self.skipWaiting();
-      })
+    caches.open(CACHE_NAME).then(function (cache) {
+      return cache.addAll(ASSETS_TO_CACHE);
+    })
   );
+});
+
+self.addEventListener('message', function (event) {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener('activate', function (event) {
@@ -68,9 +86,20 @@ self.addEventListener('fetch', function (event) {
         .then(function (response) {
           if (response && response.status === 200 && response.type === 'basic') {
             var responseClone = response.clone();
-            caches.open(CACHE_NAME).then(function (cache) {
-              cache.put(request, responseClone);
-            });
+            event.waitUntil(
+              caches
+                .open(CACHE_NAME)
+                .then(function (cache) {
+                  return cache.put(request, responseClone).then(function () {
+                    return trimCache(cache);
+                  });
+                })
+                .catch(function (error) {
+                  // QuotaExceededError must not become an unhandled rejection;
+                  // the response is still usable without being cached.
+                  console.warn('SW cache write failed:', error);
+                })
+            );
           }
           return response;
         })

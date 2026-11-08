@@ -9,7 +9,7 @@ export function OfflineIndicator() {
 
   return (
     <div
-      className="fixed top-0 left-0 right-0 z-50 bg-lcd-danger text-white text-center text-xs py-1 font-lcd"
+      className="sticky top-0 left-0 right-0 z-50 bg-lcd-danger text-white text-center text-xs py-1 font-lcd"
       role="alert"
       aria-live="assertive"
     >
